@@ -1,0 +1,352 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "HRMS BILLING API",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:8000/api/v1",
+            "description": "Server for production"
+        }
+    ],
+    "paths": {
+        "/register": {
+            "post": {
+                "tags": [
+                    "Actions of Register"
+                ],
+                "summary": "Registering user",
+                "operationId": "UserRegister",
+                "requestBody": {
+                    "request": "UserRegisterRequest",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserData"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "422": {
+                        "description": "UnprocessibleContent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrors"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "User`s Data registered",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserRegisteredData"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": [
+                    "Actions of Register"
+                ],
+                "summary": "Authentificating user",
+                "operationId": "UserLogin",
+                "requestBody": {
+                    "request": "UserLoginRequest",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserLoginCredentials"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "422": {
+                        "description": "UnprocessibleContent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrors"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "User Authentificated Successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserRegisteredData"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "tags": [
+                    "Actions of Register"
+                ],
+                "summary": "Get Logged in User",
+                "operationId": "GetLoggedINUser",
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "message": "Unauthinticated"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": " Authentificated User",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/checkToken": {
+            "get": {
+                "tags": [
+                    "Actions of Register"
+                ],
+                "summary": "Chack if the token is valid",
+                "operationId": "CheckTokenIsValid",
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "message": "Unauthinticated"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": " Token Is Valid",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": false
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Actions of Register"
+                ],
+                "summary": "Logout",
+                "operationId": "Logout",
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "message": "Unauthinticated"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Successfully Loged Out",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": false
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "UserData": {
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "password_confirmation"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "exampleName"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "exampleEmail@gamil.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "examplePassword"
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "example": "examplePassword"
+                    }
+                },
+                "type": "object",
+                "example": {
+                    "name": "SomeNAme",
+                    "email": "SomeEmail",
+                    "password": "SomePassword",
+                    "password_confirmation": "SomePassword"
+                }
+            },
+            "UserDataResponse": {
+                "required": [
+                    "id",
+                    "name",
+                    "email"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": "15"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "exampleemail@gmail.com"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "ExampleUserName"
+                    }
+                },
+                "type": "object"
+            },
+            "UserDetails": {
+                "required": [
+                    "user",
+                    "token"
+                ],
+                "properties": {
+                    "user": {
+                        "type": "object"
+                    }
+                },
+                "type": "object",
+                "example": {
+                    "user": {
+                        "id": 5,
+                        "name": "Examplename",
+                        "email": "example@mail.ru"
+                    }
+                }
+            },
+            "UserLoginCredentials": {
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "example": "exampleEmail@mail.ru"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "examplePassword"
+                    }
+                },
+                "type": "object",
+                "example": {
+                    "email": "SomeEmail@mail.ru",
+                    "password": "SomePassword"
+                }
+            },
+            "UserRegisteredData": {
+                "required": [
+                    "user",
+                    "token"
+                ],
+                "properties": {
+                    "user": {
+                        "type": "object"
+                    },
+                    "token": {
+                        "type": "string",
+                        "example": "15|428a546f3244e39a8e9007d4c"
+                    }
+                },
+                "type": "object",
+                "example": {
+                    "user": {
+                        "id": 5,
+                        "name": "Examplename",
+                        "email": "example@mail.ru"
+                    },
+                    "token": "kzhfkjsdhfjkhsdjfh"
+                }
+            },
+            "ValidationErrors": {
+                "required": [
+                    "errors",
+                    "message"
+                ],
+                "properties": {
+                    "errors": {
+                        "description": "$errors",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "any validation error"
+                        }
+                    },
+                    "message": {
+                        "description": "$message",
+                        "type": "string",
+                        "example": "any error message"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "name": "Authorization",
+                "in": "header",
+                "scheme": "Bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Actions of Register",
+            "description": "Actions of Authintification"
+        }
+    ]
+}

@@ -1,5 +1,6 @@
 import {createStore} from "vuex";
 import router from "../router";
+import sendRequestWithBerarer from "../axios/sendRequestWithBearer";
 const store = createStore({
     state () {
         return {
@@ -40,9 +41,7 @@ const store = createStore({
         },
         async logout({ commit, state }){
            let token=localStorage.getItem('userToken');
-            axios.post('/api/v1/logout','',{headers:{
-                    'Authorization': 'Bearer '+token
-                }}).then((IfEverythingWentRight)=>{
+            sendRequestWithBerarer.post('/logout').then((IfEverythingWentRight)=>{
                     if (IfEverythingWentRight){
                         localStorage.clear();
                         commit('changeUserStatus',false);

@@ -243,6 +243,10 @@
                     "name": {
                         "type": "string",
                         "example": "ExampleUserName"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": "false"
                     }
                 },
                 "type": "object"
@@ -262,7 +266,8 @@
                     "user": {
                         "id": 5,
                         "name": "Examplename",
-                        "email": "example@mail.ru"
+                        "email": "example@mail.ru",
+                        "is_active": true
                     }
                 }
             },
@@ -340,7 +345,8 @@
                 "name": "Authorization",
                 "in": "header",
                 "scheme": "Bearer"
-            }
+            },
+            "0": []
         }
     },
     "tags": [

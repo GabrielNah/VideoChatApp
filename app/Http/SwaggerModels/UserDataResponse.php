@@ -35,5 +35,13 @@ class UserDataResponse
      *   )
      */
     public $email;
+    /**
+     *   @OA\Property(
+     *       type="boolean",
+     *        property="is_active",
+     *       example="false"
+     *   )
+     */
+    public $is_active;
 
 }

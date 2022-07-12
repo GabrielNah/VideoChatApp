@@ -5,7 +5,7 @@ namespace App\Http\SwaggerModels;
 /**
  * @OA\Schema(
  *     required={"user", "token"},
- *     example={"user":{"id":5,"name":"Examplename","email":"example@mail.ru"}},
+ *     example={"user":{"id":5,"name":"Examplename","email":"example@mail.ru","is_active":true}},
  * )
  */
 

@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\ChatMessages;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,6 +15,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+         ChatMessages::create([
+             'to'=>2,
+             'from'=>1,
+             'message'=>Str::random(25)
+         ]);
     }
 }

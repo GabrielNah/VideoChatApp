@@ -2,6 +2,7 @@ import LoginComponent from "../../Component/LoginComponent";
 import RegisterComponent from "../../Component/RegisterComponent";
 import {createRouter,createWebHistory} from "vue-router";
 import Dashboard from "../../Component/Dashboard";
+import store from "../store";
 const routes=[
     {
         path:'/login',
@@ -10,6 +11,7 @@ const routes=[
         beforeEnter:(to,from)=>{
             let token=localStorage.getItem('userToken');
             if (token == null){
+                store.commit('changeUserStatus',false)
                 return true;
             }else {
                 let config={
@@ -19,9 +21,13 @@ const routes=[
                 }
                 axios.get('/api/v1/checkToken').then((IfTokenIsValid)=>{
                     if(!IfTokenIsValid){
+                        store.commit('changeUserStatus',false);
+                        localStorage.clear();
                         return true;
                     }else {
-                        router.push({path:'/dashboard'})
+                        store.commit('changeUserStatus',true)
+                        router.push({path:'/dashboard'});
+
                     }
                 })
             }
@@ -34,6 +40,7 @@ const routes=[
         beforeEnter:(to,from)=>{
             let token=localStorage.getItem('userToken');
             if (token == null){
+                store.commit('changeUserStatus',false)
                 return true;
             }else {
                 let config={
@@ -43,8 +50,11 @@ const routes=[
                 }
                 axios.get('/api/v1/checkToken').then((IfTokenIsValid)=>{
                     if(!IfTokenIsValid){
+                        localStorage.clear()
+                        store.commit('changeUserStatus',false)
                         return true;
                     }else {
+                        store.commit('changeUserStatus',true)
                         router.push({path:'/dashboard'})
                     }
                 })
@@ -58,6 +68,7 @@ const routes=[
         beforeEnter:(to,from)=>{
             let token=localStorage.getItem('userToken');
             if (token == null){
+                store.commit('changeUserStatus',false)
                router.push({path:'/login'})
             }else {
                 let config={
@@ -67,8 +78,11 @@ const routes=[
                 }
                 axios.get('/api/v1/checkToken').then((IfTokenIsValid)=>{
                     if(!IfTokenIsValid){
+                        store.commit('changeUserStatus',false)
+                        localStorage.clear()
                         router.push({path:'/login'})
                     }else {
+                        store.commit('changeUserStatus',true)
                         return true;
                     }
                 })

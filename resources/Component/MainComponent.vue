@@ -1,26 +1,33 @@
 <template>
-    <div class="page">
-        <div><button v-if="$store.state.UserLogedIn" @click="$store.dispatch('logout')">Log Out</button></div>
-        <div class="routes"><router-link v-if="!$store.state.UserLogedIn" to="/login">Login</router-link>|<router-link v-if="!$store.state.UserLogedIn" to="/register">Register</router-link></div>
-        <div class="forms">
-            <router-view></router-view>
-        </div>
+    <div>
+        <navbar-component class="navbar"></navbar-component>
+        <router-view></router-view>
+
+
     </div>
 </template>
 
 <script>
+    import NavbarComponent from "./NavbarComponent";
+    import router from "../js/router";
     export default {
-        name: "MainComponent"
+        name: "MainComponent",
+        components: {NavbarComponent},
+        async beforeMount() {
+            let token=localStorage.getItem('userToken');
+            if (token == null){
+                this.$store.commit('changeUserStatus',false)
+            }else {
+                this.$store.commit('changeUserStatus',true)
+            }
+        }
     }
 </script>
 
 <style scoped>
-.page{
-    width: 300px;
-    margin-left: 30%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
+    .navbar{
+        width: 100%;
+        height: 50px;
+        margin: 10px 0 10px 0;
+    }
 </style>

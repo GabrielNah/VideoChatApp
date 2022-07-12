@@ -25,6 +25,9 @@ Route::group(['middleware'=>'auth:sanctum'],function(){
     Route::get('/user',[\App\Http\Controllers\Api\V1\AuthController::class,'getLoggedInUser']);
     Route::get('/checkToken',[\App\Http\Controllers\Api\V1\AuthController::class,'checkToken']);
     Route::post('/logout',[\App\Http\Controllers\Api\V1\AuthController::class,'logout']);
+    Route::get('/users',[\App\Http\Controllers\Api\V1\UsersDataController::class,'getAllUsers']);
+    Route::post('/chat',[\App\Http\Controllers\Api\V1\UsersDataController::class,'getChatMessages']);
+    Route::post('/message',[\App\Http\Controllers\Api\V1\UsersDataController::class,'appendInChat']);
 
 
 });

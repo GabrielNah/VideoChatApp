@@ -58,6 +58,7 @@ class AuthController extends BaseController
             'name'=>$request->name,
             'email'=>$request->email,
             'password'=>bcrypt($request->password),
+            'is_active'=>true
 
         ]);
         $token=$user->createToken('myToken')->plainTextToken;
@@ -110,6 +111,8 @@ class AuthController extends BaseController
             return $this->responseInvalidData($message,$errors);
         }else{
             $token=$user->createToken("my-token")->plainTextToken;
+            $user->is_active=true;
+            $user->save();
             \auth()->login($user);
             return $this->responseOk(JsonResource::make(['token'=>$token,'user'=>new UserResource($user)]));
         }
@@ -248,6 +251,9 @@ class AuthController extends BaseController
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
+        $user=$request->user();
+        $user->is_active=false;
+        $user->save();
         return true;
     }
 

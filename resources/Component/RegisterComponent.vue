@@ -1,6 +1,11 @@
 <template>
+    <div class="page">
+        <div class="forms">
+
+
     <div class="register">
         <div>
+            <h3>Register here</h3>
             <form action="" id="register">
             <input name="name" v-model="name" placeholder="name"><br>
             <input name="email" v-model="email" placeholder="email"><br>
@@ -10,6 +15,8 @@
             </form>
         </div>
 
+    </div>
+        </div>
     </div>
 </template>
 
@@ -37,6 +44,14 @@
 </script>
 
 <style scoped>
+    page{
+        width: 30%;
+        margin-left: 30%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
     input{
         border: 1px solid black;
         background-color: #a0aec0;

@@ -19747,13 +19747,28 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   name: "ChatComponent",
-  props: ['usersIds'],
+  props: ['usersIds', 'newMessage', 'usersData'],
   data: function data() {
     return {
       currentUserId: null,
       anotherUserId: null,
-      messages: []
+      messages: [],
+      newMessage: this.newMessage,
+      friendsData: this.usersData
     };
+  },
+  watch: {
+    newMessage: {
+      handler: function handler(newMessage, childMessage) {
+        var messageData = {
+          from: this.anotherUserId,
+          to: this.currentUserId,
+          message: newMessage
+        };
+        this.messages.push(messageData);
+      },
+      deep: true
+    }
   },
   methods: {
     getChatMessages: function getChatMessages(ChatIndex) {
@@ -19792,17 +19807,24 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
             switch (_context2.prev = _context2.next) {
               case 0:
                 message = _this2.$refs.chatMessage.value;
+
+                if (!(message != "")) {
+                  _context2.next = 6;
+                  break;
+                }
+
                 data = {
                   from: _this2.currentUserId,
                   to: _this2.anotherUserId,
                   message: message
                 };
-                _context2.next = 4;
-                return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].post('/message', data).then(function (x) {
-                  return console.log(x);
+                _this2.$refs.chatMessage.value = '';
+                _context2.next = 6;
+                return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].post('/message', data).then(function (sendedMessage) {
+                  _this2.messages.push(sendedMessage.data);
                 });
 
-              case 4:
+              case 6:
               case "end":
                 return _context2.stop();
             }
@@ -19823,11 +19845,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
               return _this3.getChatMessages();
 
             case 2:
-              Echo["private"]('chat-channel.' + _this3.currentUserId).listen('realTimeNotifications', function (e) {
-                console.log(e);
-              });
-
-            case 3:
             case "end":
               return _context3.stop();
           }
@@ -19871,20 +19888,74 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     return {
       user: null,
       friends: null,
-      chats: []
+      chats: [],
+      receivedNewMessage: false,
+      newMessage: null,
+      rightChatIndex: null,
+      usersWithOpenChat: []
     };
   },
   methods: {
+    closeChat: function closeChat(chatsArray) {
+      console.log(chatsArray);
+      var indexOfChatsArray = this.chats.indexOf(chatsArray);
+      this.chats.splice(indexOfChatsArray, 1);
+      var indexOfFriend = this.usersWithOpenChat.indexOf(chatsArray[0]);
+      this.usersWithOpenChat.splice(indexOfFriend, 1);
+    },
+    checkIfItsRirghtChat: function checkIfItsRirghtChat(fromUser, message) {
+      var _this = this;
+
+      var currentUser = this.user.id;
+      var idsOfUsers = [];
+      idsOfUsers.push(fromUser);
+      idsOfUsers.push(currentUser);
+      this.chats.forEach(function (chat, index) {
+        if (JSON.stringify(chat) == JSON.stringify(idsOfUsers)) {
+          _this.rightChatIndex = index;
+          _this.newMessage = message;
+          _this.receivedNewMessage = true;
+          console.log(_this.rightChatIndex, _this.newMessage, _this.receivedNewMessage);
+        }
+      });
+    },
+    showMessageInChat: function showMessageInChat(friendId, message) {
+      var currentUserId = this.user.id;
+      var idsOfUsers = [];
+      idsOfUsers.push(friendId);
+      idsOfUsers.push(currentUserId);
+      var ifTheChatIsOpen = false;
+      this.chats.forEach(function (chat) {
+        if (JSON.stringify(chat) == JSON.stringify(idsOfUsers)) {
+          ifTheChatIsOpen = true;
+        }
+      });
+
+      if (!ifTheChatIsOpen) {
+        this.chats.push(idsOfUsers);
+      }
+
+      if (ifTheChatIsOpen) {
+        this.checkIfItsRirghtChat(friendId, message);
+      }
+    },
     openChat: function openChat(someUsersIndex) {
       var anotherUserId = this.friends[someUsersIndex].id;
       var chat = [];
       chat.push(anotherUserId);
       chat.push(this.user.id);
-      this.chats.push(chat);
+      var ifChatIsOpen = this.chats.some(function (chatItem) {
+        return JSON.stringify(chat) == JSON.stringify(chatItem);
+      });
+
+      if (!ifChatIsOpen) {
+        this.chats.push(chat);
+        this.usersWithOpenChat.push(this.friends[someUsersIndex]);
+      }
     }
   },
   beforeCreate: function beforeCreate() {
-    var _this = this;
+    var _this2 = this;
 
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
       return _regeneratorRuntime().wrap(function _callee$(_context) {
@@ -19894,14 +19965,14 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
               _context.next = 2;
               return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].get('/user').then(function (usersData) {
                 console.log(usersData);
-                _this.user = usersData.data.user;
+                _this2.user = usersData.data.user;
               });
 
             case 2:
               _context.next = 4;
               return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].get('/users').then(function (allUsers) {
                 console.log(allUsers);
-                _this.friends = allUsers.data;
+                _this2.friends = allUsers.data;
               });
 
             case 4:
@@ -19911,6 +19982,20 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         }
       }, _callee);
     }))();
+  },
+  mounted: function mounted() {
+    var _this3 = this;
+
+    Echo["private"]('chat-channel.' + this.user.id).listen('SendMessageEvent', function (chatMessage) {
+      console.log(chatMessage);
+
+      _this3.showMessageInChat(chatMessage.from, chatMessage.message);
+    });
+    Echo["private"]('activeUsers').listen('userIsActive', function (e) {
+      console.log(e);
+    }).listen('userIsInactive', function (e) {
+      console.log(e);
+    });
   }
 });
 
@@ -20071,17 +20156,26 @@ var _hoisted_1 = {
   "class": "chat"
 };
 var _hoisted_2 = {
-  "class": "messages"
+  "class": "username"
 };
 var _hoisted_3 = {
-  "class": "sendMessage"
+  "class": "messages"
 };
 var _hoisted_4 = {
+  "class": "sendMessage"
+};
+var _hoisted_5 = {
   ref: "chatMessage",
   type: "text"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.messages, function (message) {
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.friendsData.name), 1
+  /* TEXT */
+  ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    onClick: _cache[0] || (_cache[0] = function ($event) {
+      return _ctx.$emit('closeChat', $props.usersIds);
+    })
+  }, "✕")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.messages, function (message) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", {
       "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
         fromMe: message.from == $data.currentUserId,
@@ -20092,10 +20186,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     );
   }), 256
   /* UNKEYED_FRAGMENT */
-  ))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", _hoisted_4, null, 512
+  ))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", _hoisted_5, null, 512
   /* NEED_PATCH */
   ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    onClick: _cache[0] || (_cache[0] = function () {
+    onClick: _cache[1] || (_cache[1] = function () {
       return $options.sendMessage && $options.sendMessage.apply($options, arguments);
     })
   }, "Send")])]);
@@ -20152,12 +20246,15 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     , _hoisted_5);
   }), 256
   /* UNKEYED_FRAGMENT */
-  ))]), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chats, function (chat) {
+  ))]), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chats, function (chat, index) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_chat_component, {
-      usersIds: chat
+      onCloseChat: $options.closeChat,
+      usersData: $data.usersWithOpenChat[index],
+      usersIds: chat,
+      newMessage: $data.receivedNewMessage && index == $data.rightChatIndex ? $data.newMessage : null
     }, null, 8
     /* PROPS */
-    , ["usersIds"]);
+    , ["onCloseChat", "usersData", "usersIds", "newMessage"]);
   }), 256
   /* UNKEYED_FRAGMENT */
   ))])]);
@@ -20291,43 +20388,61 @@ var _withScopeId = function _withScopeId(n) {
 var _hoisted_1 = {
   key: 0
 };
-var _hoisted_2 = {
+
+var _hoisted_2 = /*#__PURE__*/_withScopeId(function () {
+  return /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("b", null, "Dashboard", -1
+  /* HOISTED */
+  );
+});
+
+var _hoisted_3 = {
   key: 1,
   "class": "routes"
 };
 
-var _hoisted_3 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Login");
+var _hoisted_4 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Login");
 
-var _hoisted_4 = /*#__PURE__*/_withScopeId(function () {
+var _hoisted_5 = /*#__PURE__*/_withScopeId(function () {
   return /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("b", null, "|", -1
   /* HOISTED */
   );
 });
 
-var _hoisted_5 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Register");
+var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Register");
 
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_router_link = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("router-link");
 
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [_ctx.$store.state.UserLogedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "leave",
-    onClick: _cache[0] || (_cache[0] = function ($event) {
-      return _ctx.$store.dispatch('logout');
-    })
-  }, "Log Out")])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !_ctx.$store.state.UserLogedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
-    to: "/login"
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [_ctx.$store.state.UserLogedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [_ctx.$store.state.UserLogedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_router_link, {
+    key: 0,
+    "class": "dashboard",
+    to: "/Dashboard"
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [_hoisted_3];
+      return [_hoisted_2];
     }),
     _: 1
     /* STABLE */
 
-  }), _hoisted_4, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
+  })) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "leave",
+    onClick: _cache[0] || (_cache[0] = function ($event) {
+      return _ctx.$store.dispatch('logout');
+    })
+  }, "Log Out")])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !_ctx.$store.state.UserLogedIn ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
+    to: "/login"
+  }, {
+    "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
+      return [_hoisted_4];
+    }),
+    _: 1
+    /* STABLE */
+
+  }), _hoisted_5, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
     to: "/register"
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [_hoisted_5];
+      return [_hoisted_6];
     }),
     _: 1
     /* STABLE */
@@ -20500,6 +20615,8 @@ sendRequestWithBerarer.defaults.headers.common['Authorization'] = 'Bearer ' + us
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var laravel_echo__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! laravel-echo */ "./node_modules/laravel-echo/dist/echo.js");
+/* harmony import */ var pusher_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/dist/web/pusher.js");
+/* harmony import */ var pusher_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(pusher_js__WEBPACK_IMPORTED_MODULE_1__);
 window._ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
@@ -20516,7 +20633,8 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
  */
 
 
-window.Pusher = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/dist/web/pusher.js");
+
+window.Pusher = (pusher_js__WEBPACK_IMPORTED_MODULE_1___default());
 window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   broadcaster: 'pusher',
   key: "a88e69e2b276b339f3d2",
@@ -20798,7 +20916,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.fromMe[data-v-7ffe2cab]{\n        float: right;\n        clear: both;\n}\n.toMe[data-v-7ffe2cab]{\n        float: left;\n        clear: both;\n}\n.sendMessage[data-v-7ffe2cab]{\n        width: 100%;\n        height: 25%;\n}\n.sendMessage button[data-v-7ffe2cab]{\n        width: 20%;\n        margin: 0px 0px 0px 0px ;\n}\n.chat[data-v-7ffe2cab]{\n        margin-top: 25%;\n        display: inline-flex;\n        flex-direction: column;\n        border: 2px solid black;\n        width: 20%;\n        height: 60%;\n}\n.messages[data-v-7ffe2cab]{\n        margin: 0px 0px 0px 0px ;\n        height: 80%;\n        width: 100%;\n        background-color: #cbd5e0;\n}\n.messages p[data-v-7ffe2cab]{\n        background-color: aqua;\n        width: -webkit-fit-content;\n        width: -moz-fit-content;\n        width: fit-content;\n        border-radius:10% ;\n}\ninput[data-v-7ffe2cab]{\n        background-color: #a0aec0;\n        width: 80%;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n.username[data-v-7ffe2cab]{\n        display: flex;\n        flex-direction: row;\n        flex-wrap: nowrap;\n        justify-content: space-between;\n}\n.fromMe[data-v-7ffe2cab]{\n        float: right;\n        clear: both;\n}\n.toMe[data-v-7ffe2cab]{\n        float: left;\n        clear: both;\n}\n.sendMessage[data-v-7ffe2cab]{\n        width: 100%;\n        height: 25%;\n}\n.sendMessage button[data-v-7ffe2cab]{\n        width: 20%;\n        margin: 0px 0px 0px 0px ;\n}\n.chat[data-v-7ffe2cab]{\n        margin-top: 25%;\n        display: inline-flex;\n        flex-direction: column;\n        border: 2px solid black;\n        width: 20%;\n        height: 60%;\n}\n.messages[data-v-7ffe2cab]{\n        overflow-y: scroll;\n        /*overflow: hidden;*/\n        margin: 0px 0px 0px 0px ;\n        height: 80%;\n        width: 100%;\n        background-color: #cbd5e0;\n}\n.messages p[data-v-7ffe2cab]{\n        font-weight: normal;\n        background-color: aqua;\n        width: -webkit-fit-content;\n        width: -moz-fit-content;\n        width: fit-content;\n        border-radius:10% ;\n}\ninput[data-v-7ffe2cab]{\n        background-color: #a0aec0;\n        width: 80%;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -20822,7 +20940,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.hello_user[data-v-12fe7b8c]{\n        height: 20px;\n}\n.content[data-v-12fe7b8c]{\n        height: 80%;\n        position: relative;\n}\n.active[data-v-12fe7b8c]{\n        background-color: green;\n}\n.dashboard[data-v-12fe7b8c]{\n        width: 100%;\n        position: relative;\n}\n.users[data-v-12fe7b8c] {\n    position: absolute;\n    right: 0;\n    top: 0;\n}\n.users p[data-v-12fe7b8c]{\n        margin-right: 5px;\n}\n\n\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n.hello_user[data-v-12fe7b8c]{\n        height: 20px;\n}\n.content[data-v-12fe7b8c]{\n        height: 80%;\n        position: relative;\n}\n.active[data-v-12fe7b8c]{\n        background-color: green;\n}\n.dashboard[data-v-12fe7b8c]{\n        width: 100%;\n        position: relative;\n}\n.users[data-v-12fe7b8c] {\n    position: absolute;\n    right: 0;\n    top: 0;\n}\n.users p[data-v-12fe7b8c]{\n        font-weight: bolder;\n        margin-right: 5px;\n}\n\n\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -20894,7 +21012,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.leave[data-v-db8c791a]{\n        margin-right:15px ;\n        margin-top: 5px;\n        float: right;\n        clear: both;\n}\n.routes div[data-v-db8c791a]{\n        width: 30%;\n}\n.routes[data-v-db8c791a]{\n        margin-top: 5px;\n        width: 30px;\n        height: 10px;\n        cursor: pointer;\n        margin-left: 20px;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n.dashboard[data-v-db8c791a]{\n        margin-left:15px ;\n        margin-top: 5px;\n        float: left;\n        clear: both;\n}\n.leave[data-v-db8c791a]{\n        margin-right:15px ;\n        margin-top: 5px;\n        float: right;\n        clear: both;\n        cursor: pointer;\n}\n.routes div[data-v-db8c791a]{\n        width: 30%;\n}\n.routes[data-v-db8c791a]{\n        margin-top: 5px;\n        width: 30px;\n        height: 10px;\n        cursor: pointer;\n        margin-left: 20px;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

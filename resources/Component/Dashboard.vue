@@ -10,7 +10,7 @@
             <div class="users">
                 <p v-for="(friend,index) in friends" @click="openChat(index)"   :class="{active:friend.is_active!='0'}">{{friend.name}}</p>
             </div>
-            <chat-component :usersIds="chat" v-for="chat in chats"></chat-component>
+            <chat-component @closeChat="closeChat" :usersData="usersWithOpenChat[index]" :usersIds="chat" :newMessage="(receivedNewMessage && index==rightChatIndex ) ? newMessage : null" v-for="(chat,index) in chats"></chat-component>
         </div>
 
     </div>
@@ -27,16 +27,68 @@
           return{
               user:null,
               friends:null,
-              chats:[]
+              chats:[],
+              receivedNewMessage:false,
+              newMessage:null,
+              rightChatIndex:null,
+              usersWithOpenChat:[]
           }
         },
         methods:{
+            closeChat(chatsArray){
+                console.log(chatsArray)
+                let indexOfChatsArray=this.chats.indexOf(chatsArray)
+                this.chats.splice(indexOfChatsArray,1);
+                let indexOfFriend=this.usersWithOpenChat.indexOf(chatsArray[0]);
+                this.usersWithOpenChat.splice(indexOfFriend,1)
+
+            },
+            checkIfItsRirghtChat(fromUser,message){
+                let currentUser=this.user.id;
+                let idsOfUsers=[];
+                idsOfUsers.push(fromUser);
+                idsOfUsers.push(currentUser);
+                this.chats.forEach((chat,index)=>{
+                    if(JSON.stringify(chat)==JSON.stringify(idsOfUsers)){
+                        this.rightChatIndex=index;
+                        this.newMessage=message;
+                        this.receivedNewMessage=true;
+                        console.log(this.rightChatIndex,this.newMessage,this.receivedNewMessage);
+                    }
+                })
+            },
+            showMessageInChat(friendId,message){
+                let currentUserId=this.user.id;
+                let idsOfUsers=[];
+                idsOfUsers.push(friendId);
+                idsOfUsers.push(currentUserId);
+                let ifTheChatIsOpen=false;
+                this.chats.forEach((chat)=>{
+                    if(JSON.stringify(chat)==JSON.stringify(idsOfUsers)){
+                        ifTheChatIsOpen=true;
+                    }
+                })
+                if(!ifTheChatIsOpen){
+                    this.chats.push(idsOfUsers);
+                }
+                if(ifTheChatIsOpen){
+                    this.checkIfItsRirghtChat(friendId,message);
+                }
+
+            },
             openChat(someUsersIndex){
                 let anotherUserId=this.friends[someUsersIndex].id
                 let chat=[];
                 chat.push(anotherUserId);
                 chat.push(this.user.id)
-                this.chats.push(chat)
+                let ifChatIsOpen=this.chats.some((chatItem)=>{
+                    return JSON.stringify(chat)==JSON.stringify(chatItem)
+                });
+                if(!ifChatIsOpen){
+                    this.chats.push(chat)
+                    this.usersWithOpenChat.push(this.friends[someUsersIndex])
+                }
+
             }
         },
         async beforeCreate(){
@@ -50,8 +102,20 @@
 
                  })
 
-             }
+             },
+         mounted() {
+            Echo.private('chat-channel.'+this.user.id).
+            listen('SendMessageEvent',(chatMessage)=>{
+                console.log(chatMessage)
+                    this.showMessageInChat(chatMessage.from,chatMessage.message);
 
+            })
+             Echo.private('activeUsers').listen('userIsActive',(e)=>{
+                 console.log(e)
+             }).listen('userIsInactive',(e)=>{
+                 console.log(e)
+             })
+        }
 
 
     }
@@ -79,6 +143,7 @@
     top: 0;
 }
     .users p{
+        font-weight: bolder;
         margin-right: 5px;
     }
 

@@ -40,7 +40,7 @@ class UsersDataController extends BaseController
                 'message'=>$request->message,
             ]);
             event(new SendMessageEvent($message));
-            return true;
+            return $this->responseCreated(new MessageResource($message));
 
 
     }

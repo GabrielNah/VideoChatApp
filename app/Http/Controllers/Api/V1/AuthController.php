@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Api\V1;
+use App\Events\UserIsActiveEvent;
+use App\Events\UserIsInactiveEvent;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
@@ -63,6 +65,7 @@ class AuthController extends BaseController
         ]);
         $token=$user->createToken('myToken')->plainTextToken;
         Auth::login($user);
+        event(new UserIsActiveEvent($user->id));
         return $this->responseCreated(JsonResource::make(['user'=>new UserResource($user),'userToken'=>$token]));
     }
 
@@ -114,6 +117,7 @@ class AuthController extends BaseController
             $user->is_active=true;
             $user->save();
             \auth()->login($user);
+            event(new UserIsActiveEvent($user->id));
             return $this->responseOk(JsonResource::make(['token'=>$token,'user'=>new UserResource($user)]));
         }
     }
@@ -254,6 +258,7 @@ class AuthController extends BaseController
         $user=$request->user();
         $user->is_active=false;
         $user->save();
+        event(new UserIsInactiveEvent($user->id));
         return true;
     }
 

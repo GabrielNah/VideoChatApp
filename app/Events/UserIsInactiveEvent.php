@@ -10,7 +10,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class SendMessageEvent implements ShouldBroadcast
+class UserIsInactiveEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -19,14 +19,10 @@ class SendMessageEvent implements ShouldBroadcast
      *
      * @return void
      */
-    public $from;
-    public $to;
-    public $message;
-    public function __construct($messageDetails)
+    public $inactive_user;
+    public function __construct($id)
     {
-        $this->message=$messageDetails->message;
-        $this->to=$messageDetails->to;
-        $this->from=$messageDetails->from;
+        $this->inactive_user=$id;
     }
 
     /**
@@ -36,11 +32,16 @@ class SendMessageEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('chat-channel.'.$this->to);
+        return new PrivateChannel('activeUsers');
+    }
+
+    public function broadcastAs()
+    {
+        return 'userIsInactive';
     }
 
     public function broadcastWith()
     {
-        return ['from'=>$this->from,'message'=>$this->message];
+        return ['inactive_user'=>$this->inactive_user];
     }
 }

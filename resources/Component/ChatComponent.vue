@@ -1,6 +1,8 @@
 <template>
     <div class="chat">
+        <div class="username"><p>{{friendsData.name}}</p><button @click="$emit('closeChat',usersIds)">&#x2715</button></div>
         <div class="messages">
+
             <p v-for="message in messages" :class="{ fromMe:message.from==currentUserId,toMe:message.from!=currentUserId}">{{message.message}}</p>
         </div>
         <div class="sendMessage">
@@ -13,13 +15,29 @@
     import sendRequestWithBerarer from "../js/axios/sendRequestWithBearer";
     export default {
         name: "ChatComponent",
-        props:['usersIds'],
+        props:['usersIds','newMessage','usersData'],
         data(){
             return{
                 currentUserId:null,
                 anotherUserId:null,
-                messages:[]
+                messages:[],
+                newMessage:this.newMessage,
+                friendsData:this.usersData
             }
+        },
+        watch:{
+            newMessage: {
+                handler(newMessage, childMessage) {
+                    let messageData = {
+                        from: this.anotherUserId,
+                        to: this.currentUserId,
+                        message: newMessage
+                    }
+                    this.messages.push(messageData)
+                },
+                deep:true
+            },
+
         },
         methods:{
             async getChatMessages(ChatIndex){
@@ -32,22 +50,36 @@
             },
             async sendMessage(){
                 let message=this.$refs.chatMessage.value
-                let data={
-                    from:this.currentUserId,
-                    to:this.anotherUserId,
-                    message
+                if(message != ""){
+                    let data={
+                        from:this.currentUserId,
+                        to:this.anotherUserId,
+                        message
+                    }
+                    this.$refs.chatMessage.value='';
+                    await sendRequestWithBerarer.post('/message',data).then(sendedMessage=>{
+                        this.messages.push(sendedMessage.data);
+                    });
                 }
-               await sendRequestWithBerarer.post('/message',data).then(x=>console.log(x));
+
+
             }
         },
         async created() {
+
             await this.getChatMessages()
-            Echo.private('chat-channel.'+this.currentUserId).listen('realTimeNotifications',(e)=>{console.log(e)})
+
         }
     }
 </script>
 
 <style scoped>
+    .username{
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+    }
     .fromMe{
         float: right;
         clear: both;
@@ -73,12 +105,15 @@
         height: 60%;
     }
     .messages{
+        overflow-y: scroll;
+        /*overflow: hidden;*/
         margin: 0px 0px 0px 0px ;
         height: 80%;
         width: 100%;
         background-color: #cbd5e0;
     }
     .messages p{
+        font-weight: normal;
         background-color: aqua;
         width: fit-content;
         border-radius:10% ;

@@ -14,5 +14,8 @@ use Illuminate\Support\Facades\Broadcast;
 */
 
 Broadcast::channel('chat-channel.{id}', function ($user, $id) {
-    return true;
+    return $user->id==$id;
+});
+Broadcast::channel('activeUsers', function ($user) {
+    return $user->is_active;
 });

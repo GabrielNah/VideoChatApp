@@ -188,10 +188,169 @@
                     }
                 }
             }
+        },
+        "/users": {
+            "get": {
+                "tags": [
+                    "Chat`s Routes"
+                ],
+                "summary": "Get All Users",
+                "operationId": "GetAllUser",
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "message": "Unauthinticated"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": " All Users",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": "[{id:5,name:Examplename,email:example@mail.ru,is_active:1}]"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chat": {
+            "post": {
+                "tags": [
+                    "Chat`s Routes"
+                ],
+                "summary": "GetMessagesFromCHat",
+                "operationId": "Get All messages In Chat",
+                "requestBody": {
+                    "request": "Chat messages",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GetMessages"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "message": "Unauthinticated"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "UnprocessibleContent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrors"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "All Messages Of 2 users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserRegisteredData"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/message": {
+            "post": {
+                "tags": [
+                    "Chat`s Routes"
+                ],
+                "summary": "SendMessageInChat",
+                "operationId": "SendMessageInChat",
+                "requestBody": {
+                    "request": "Chat messages",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GetMessages"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "message": "Unauthinticated"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "UnprocessibleContent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrors"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Message Sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetMessages"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
+            "GetMessages": {
+                "properties": {
+                    "integer": {
+                        "type": "from",
+                        "example": "1"
+                    },
+                    "to": {
+                        "type": "integer",
+                        "example": "2"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "This is Example Message"
+                    }
+                },
+                "type": "object",
+                "example": {
+                    "from": "1",
+                    "to": "115",
+                    "message": "message"
+                }
+            },
             "UserData": {
                 "required": [
                     "name",
@@ -229,7 +388,8 @@
                 "required": [
                     "id",
                     "name",
-                    "email"
+                    "email",
+                    "is_active"
                 ],
                 "properties": {
                     "id": {
@@ -316,6 +476,7 @@
                     "token": "kzhfkjsdhfjkhsdjfh"
                 }
             },
+            "UsersResource": {},
             "ValidationErrors": {
                 "required": [
                     "errors",
@@ -345,13 +506,16 @@
                 "name": "Authorization",
                 "in": "header",
                 "scheme": "Bearer"
-            },
-            "0": []
+            }
         }
     },
     "tags": [
         {
             "name": "Actions of Register",
+            "description": "Actions of Authintification"
+        },
+        {
+            "name": "Chat`s Routes",
             "description": "Actions of Authintification"
         }
     ]

@@ -35,11 +35,6 @@ class UserIsInactiveEvent implements ShouldBroadcast
         return new PrivateChannel('activeUsers');
     }
 
-    public function broadcastAs()
-    {
-        return 'userIsInactive';
-    }
-
     public function broadcastWith()
     {
         return ['inactive_user'=>$this->inactive_user];

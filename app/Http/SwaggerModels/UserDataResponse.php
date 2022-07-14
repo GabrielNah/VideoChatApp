@@ -4,7 +4,7 @@
 namespace App\Http\SwaggerModels;
 /**
  * @OA\Schema(
- *     required={"id", "name","email"},
+ *     required={"id", "name","email","is_active"},
  *     type="object"
  * )
  */

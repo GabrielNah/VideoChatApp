@@ -19747,28 +19747,17 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   name: "ChatComponent",
-  props: ['usersIds', 'newMessage', 'usersData'],
+  props: ['usersIds', 'newChatMessage', 'usersData'],
   data: function data() {
     return {
-      currentUserId: null,
-      anotherUserId: null,
+      currentUserId: this.usersIds[1],
+      anotherUserId: this.usersIds[0],
       messages: [],
-      newMessage: this.newMessage,
-      friendsData: this.usersData
+      newMessage: this.newChatMessage,
+      friendsData: this.usersData,
+      activeUsersChannel: null,
+      userIsTyping: false
     };
-  },
-  watch: {
-    newMessage: {
-      handler: function handler(newMessage, childMessage) {
-        var messageData = {
-          from: this.anotherUserId,
-          to: this.currentUserId,
-          message: newMessage
-        };
-        this.messages.push(messageData);
-      },
-      deep: true
-    }
   },
   methods: {
     getChatMessages: function getChatMessages(ChatIndex) {
@@ -19779,9 +19768,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                _this.currentUserId = _this.usersIds[1];
-                _this.anotherUserId = _this.usersIds[0];
-                _context.next = 4;
+                _context.next = 2;
                 return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].post('/chat', {
                   to: _this.anotherUserId,
                   from: _this.currentUserId
@@ -19789,7 +19776,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                   _this.messages = chatMessages.data;
                 });
 
-              case 4:
+              case 2:
               case "end":
                 return _context.stop();
             }
@@ -19797,8 +19784,37 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         }, _callee);
       }))();
     },
-    sendMessage: function sendMessage() {
+    sendTypingEvent: function sendTypingEvent() {
       var _this2 = this;
+
+      setTimeout(function () {
+        _this2.activeUsersChannel.whisper('typing', {
+          user: _this2.currentUserId,
+          typing: true
+        });
+      }, 300);
+    },
+    showUserIsTypingMessage: function showUserIsTypingMessage(typingMessage) {
+      var _this3 = this;
+
+      console.log(typingMessage);
+
+      if (this.anotherUserId == typingMessage.user) {
+        this.userIsTyping = true;
+        setTimeout(function () {
+          _this3.userIsTyping = false;
+        }, 1000);
+      }
+    },
+    catchTypingEvent: function catchTypingEvent() {
+      var _this4 = this;
+
+      this.activeUsersChannel.listenForWhisper('typing', function (typingMessage) {
+        _this4.showUserIsTypingMessage(typingMessage);
+      });
+    },
+    sendMessage: function sendMessage() {
+      var _this5 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
         var message, data;
@@ -19806,7 +19822,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                message = _this2.$refs.chatMessage.value;
+                message = _this5.$refs.chatMessage.value;
 
                 if (!(message != "")) {
                   _context2.next = 6;
@@ -19814,14 +19830,14 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                 }
 
                 data = {
-                  from: _this2.currentUserId,
-                  to: _this2.anotherUserId,
+                  from: _this5.currentUserId,
+                  to: _this5.anotherUserId,
                   message: message
                 };
-                _this2.$refs.chatMessage.value = '';
+                _this5.$refs.chatMessage.value = '';
                 _context2.next = 6;
                 return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].post('/message', data).then(function (sendedMessage) {
-                  _this2.messages.push(sendedMessage.data);
+                  _this5.messages.push(sendedMessage.data);
                 });
 
               case 6:
@@ -19831,10 +19847,23 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           }
         }, _callee2);
       }))();
+    },
+    changeScrollPosition: function changeScrollPosition() {
+      document.querySelector('.messages').scrollBy(0, document.querySelector('.messages').scrollHeight);
+    },
+    listenForLiveMessages: function listenForLiveMessages() {
+      var _this6 = this;
+
+      Echo["private"]('chat-channel.' + this.currentUserId).listen('SendMessageEvent', function (chatMessage) {
+        console.log(chatMessage);
+        chatMessage.to = _this6.currentUserId;
+
+        _this6.messages.push(chatMessage);
+      });
     }
   },
   created: function created() {
-    var _this3 = this;
+    var _this7 = this;
 
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
       return _regeneratorRuntime().wrap(function _callee3$(_context3) {
@@ -19842,15 +19871,24 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           switch (_context3.prev = _context3.next) {
             case 0:
               _context3.next = 2;
-              return _this3.getChatMessages();
+              return _this7.getChatMessages();
 
             case 2:
+              _context3.next = 4;
+              return _this7.changeScrollPosition();
+
+            case 4:
             case "end":
               return _context3.stop();
           }
         }
       }, _callee3);
     }))();
+  },
+  mounted: function mounted() {
+    this.activeUsersChannel = Echo["private"]('activeUsers');
+    this.listenForLiveMessages();
+    this.catchTypingEvent();
   }
 });
 
@@ -19892,51 +19930,60 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       receivedNewMessage: false,
       newMessage: null,
       rightChatIndex: null,
-      usersWithOpenChat: []
+      usersWithOpenChat: [],
+      chatChannel: null,
+      userStateChannel: null
     };
   },
   methods: {
     closeChat: function closeChat(chatsArray) {
       console.log(chatsArray);
-      var indexOfChatsArray = this.chats.indexOf(chatsArray);
+      var indexOfChatsArray = this.getChatsIndex(chatsArray);
       this.chats.splice(indexOfChatsArray, 1);
       var indexOfFriend = this.usersWithOpenChat.indexOf(chatsArray[0]);
       this.usersWithOpenChat.splice(indexOfFriend, 1);
     },
-    checkIfItsRirghtChat: function checkIfItsRirghtChat(fromUser, message) {
-      var _this = this;
-
-      var currentUser = this.user.id;
-      var idsOfUsers = [];
-      idsOfUsers.push(fromUser);
-      idsOfUsers.push(currentUser);
-      this.chats.forEach(function (chat, index) {
-        if (JSON.stringify(chat) == JSON.stringify(idsOfUsers)) {
-          _this.rightChatIndex = index;
-          _this.newMessage = message;
-          _this.receivedNewMessage = true;
-          console.log(_this.rightChatIndex, _this.newMessage, _this.receivedNewMessage);
+    getChatsIndex: function getChatsIndex(chat) {
+      var chatIndex;
+      this.chats.forEach(function (chatItem, indexOfChat) {
+        if (JSON.stringify(chatItem) == JSON.stringify(chat)) {
+          chatIndex = indexOfChat;
         }
       });
+      return chatIndex;
+    },
+    checkIfChatIsOpen: function checkIfChatIsOpen(chat) {
+      return this.chats.some(function (chatItem, index) {
+        return JSON.stringify(chatItem) == JSON.stringify(chat);
+      });
+    },
+    setUserActiveState: function setUserActiveState(userIndex) {
+      this.friends[userIndex].is_active = true;
+    },
+    setUserInctiveState: function setUserInctiveState(userIndex) {
+      this.friends[userIndex].is_active = false;
+    },
+    getUsersIndexById: function getUsersIndexById(id) {
+      var userIndex;
+      this.friends.forEach(function (friend, indexOfFriend) {
+        if (friend.id == id) {
+          userIndex = indexOfFriend;
+        }
+      });
+      return userIndex;
     },
     showMessageInChat: function showMessageInChat(friendId, message) {
       var currentUserId = this.user.id;
       var idsOfUsers = [];
       idsOfUsers.push(friendId);
       idsOfUsers.push(currentUserId);
-      var ifTheChatIsOpen = false;
-      this.chats.forEach(function (chat) {
-        if (JSON.stringify(chat) == JSON.stringify(idsOfUsers)) {
-          ifTheChatIsOpen = true;
-        }
-      });
 
-      if (!ifTheChatIsOpen) {
+      if (!this.checkIfChatIsOpen(idsOfUsers)) {
         this.chats.push(idsOfUsers);
-      }
-
-      if (ifTheChatIsOpen) {
-        this.checkIfItsRirghtChat(friendId, message);
+        var friendUser = this.friends.filter(function (usersData) {
+          return usersData.id = friendId;
+        });
+        this.usersWithOpenChat.push(friendUser[0]);
       }
     },
     openChat: function openChat(someUsersIndex) {
@@ -19944,18 +19991,15 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       var chat = [];
       chat.push(anotherUserId);
       chat.push(this.user.id);
-      var ifChatIsOpen = this.chats.some(function (chatItem) {
-        return JSON.stringify(chat) == JSON.stringify(chatItem);
-      });
 
-      if (!ifChatIsOpen) {
+      if (!this.checkIfChatIsOpen(chat)) {
         this.chats.push(chat);
         this.usersWithOpenChat.push(this.friends[someUsersIndex]);
       }
     }
   },
   beforeCreate: function beforeCreate() {
-    var _this2 = this;
+    var _this = this;
 
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
       return _regeneratorRuntime().wrap(function _callee$(_context) {
@@ -19965,14 +20009,14 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
               _context.next = 2;
               return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].get('/user').then(function (usersData) {
                 console.log(usersData);
-                _this2.user = usersData.data.user;
+                _this.user = usersData.data.user;
               });
 
             case 2:
               _context.next = 4;
               return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].get('/users').then(function (allUsers) {
                 console.log(allUsers);
-                _this2.friends = allUsers.data;
+                _this.friends = allUsers.data;
               });
 
             case 4:
@@ -19984,17 +20028,29 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     }))();
   },
   mounted: function mounted() {
-    var _this3 = this;
+    var _this2 = this;
 
-    Echo["private"]('chat-channel.' + this.user.id).listen('SendMessageEvent', function (chatMessage) {
+    var chatChannel = Echo["private"]('chat-channel.' + this.user.id);
+    this.chatChannel = chatChannel;
+    var userStateChannel = Echo["private"]('activeUsers');
+    this.userStateChannel = userStateChannel;
+    chatChannel.listen('SendMessageEvent', function (chatMessage) {
       console.log(chatMessage);
 
-      _this3.showMessageInChat(chatMessage.from, chatMessage.message);
+      _this2.showMessageInChat(chatMessage.from, chatMessage.message);
     });
-    Echo["private"]('activeUsers').listen('userIsActive', function (e) {
-      console.log(e);
-    }).listen('userIsInactive', function (e) {
-      console.log(e);
+    userStateChannel.listen('UserIsInactiveEvent', function (inactiveUser) {
+      console.log(inactiveUser);
+
+      var userIndex = _this2.getUsersIndexById(inactiveUser.inactive_user);
+
+      _this2.setUserInctiveState(userIndex);
+    }).listen('UserIsActiveEvent', function (activeUser) {
+      console.log(activeUser);
+
+      var userIndex = _this2.getUsersIndexById(activeUser.active_user);
+
+      _this2.setUserActiveState(userIndex);
     });
   }
 });
@@ -20162,11 +20218,11 @@ var _hoisted_3 = {
   "class": "messages"
 };
 var _hoisted_4 = {
-  "class": "sendMessage"
+  key: 0,
+  "class": "typing"
 };
 var _hoisted_5 = {
-  ref: "chatMessage",
-  type: "text"
+  "class": "sendMessage"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.friendsData.name), 1
@@ -20186,10 +20242,18 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     );
   }), 256
   /* UNKEYED_FRAGMENT */
-  ))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", _hoisted_5, null, 512
-  /* NEED_PATCH */
+  ))]), $data.userIsTyping ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("b", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.friendsData.name) + " is Typing", 1
+  /* TEXT */
+  )])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    ref: "chatMessage",
+    onKeydown: _cache[1] || (_cache[1] = function () {
+      return $options.sendTypingEvent && $options.sendTypingEvent.apply($options, arguments);
+    }),
+    type: "text"
+  }, null, 544
+  /* HYDRATE_EVENTS, NEED_PATCH */
   ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    onClick: _cache[1] || (_cache[1] = function () {
+    onClick: _cache[2] || (_cache[2] = function () {
       return $options.sendMessage && $options.sendMessage.apply($options, arguments);
     })
   }, "Send")])]);
@@ -20250,11 +20314,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_chat_component, {
       onCloseChat: $options.closeChat,
       usersData: $data.usersWithOpenChat[index],
-      usersIds: chat,
-      newMessage: $data.receivedNewMessage && index == $data.rightChatIndex ? $data.newMessage : null
+      usersIds: chat
     }, null, 8
     /* PROPS */
-    , ["onCloseChat", "usersData", "usersIds", "newMessage"]);
+    , ["onCloseChat", "usersData", "usersIds"]);
   }), 256
   /* UNKEYED_FRAGMENT */
   ))])]);
@@ -20657,9 +20720,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _Component_LoginComponent__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../Component/LoginComponent */ "./resources/Component/LoginComponent.vue");
 /* harmony import */ var _Component_RegisterComponent__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../Component/RegisterComponent */ "./resources/Component/RegisterComponent.vue");
-/* harmony import */ var vue_router__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! vue-router */ "./node_modules/vue-router/dist/vue-router.mjs");
-/* harmony import */ var _Component_Dashboard__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../Component/Dashboard */ "./resources/Component/Dashboard.vue");
-/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../store */ "./resources/js/store/index.js");
+/* harmony import */ var vue_router__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! vue-router */ "./node_modules/vue-router/dist/vue-router.mjs");
+/* harmony import */ var _axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../axios/sendRequestWithBearer */ "./resources/js/axios/sendRequestWithBearer.js");
+/* harmony import */ var _Component_Dashboard__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../Component/Dashboard */ "./resources/Component/Dashboard.vue");
+/* harmony import */ var _store__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../store */ "./resources/js/store/index.js");
+
 
 
 
@@ -20673,21 +20738,16 @@ var routes = [{
     var token = localStorage.getItem('userToken');
 
     if (token == null) {
-      _store__WEBPACK_IMPORTED_MODULE_3__["default"].commit('changeUserStatus', false);
+      _store__WEBPACK_IMPORTED_MODULE_4__["default"].commit('changeUserStatus', false);
       return true;
     } else {
-      var config = {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      };
-      axios.get('/api/v1/checkToken').then(function (IfTokenIsValid) {
+      _axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_2__["default"].get('/checkToken').then(function (IfTokenIsValid) {
         if (!IfTokenIsValid) {
-          _store__WEBPACK_IMPORTED_MODULE_3__["default"].commit('changeUserStatus', false);
-          localStorage.clear();
+          _store__WEBPACK_IMPORTED_MODULE_4__["default"].commit('changeUserStatus', false);
+          localStorage.removeItem('userToken');
           return true;
         } else {
-          _store__WEBPACK_IMPORTED_MODULE_3__["default"].commit('changeUserStatus', true);
+          _store__WEBPACK_IMPORTED_MODULE_4__["default"].commit('changeUserStatus', true);
           router.push({
             path: '/dashboard'
           });
@@ -20703,21 +20763,16 @@ var routes = [{
     var token = localStorage.getItem('userToken');
 
     if (token == null) {
-      _store__WEBPACK_IMPORTED_MODULE_3__["default"].commit('changeUserStatus', false);
+      _store__WEBPACK_IMPORTED_MODULE_4__["default"].commit('changeUserStatus', false);
       return true;
     } else {
-      var config = {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      };
-      axios.get('/api/v1/checkToken').then(function (IfTokenIsValid) {
+      _axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_2__["default"].get('/checkToken').then(function (IfTokenIsValid) {
         if (!IfTokenIsValid) {
-          localStorage.clear();
-          _store__WEBPACK_IMPORTED_MODULE_3__["default"].commit('changeUserStatus', false);
+          localStorage.removeItem('userToken');
+          _store__WEBPACK_IMPORTED_MODULE_4__["default"].commit('changeUserStatus', false);
           return true;
         } else {
-          _store__WEBPACK_IMPORTED_MODULE_3__["default"].commit('changeUserStatus', true);
+          _store__WEBPACK_IMPORTED_MODULE_4__["default"].commit('changeUserStatus', true);
           router.push({
             path: '/dashboard'
           });
@@ -20728,39 +20783,34 @@ var routes = [{
 }, {
   path: '/dashboard',
   name: 'dashboard',
-  component: _Component_Dashboard__WEBPACK_IMPORTED_MODULE_2__["default"],
+  component: _Component_Dashboard__WEBPACK_IMPORTED_MODULE_3__["default"],
   beforeEnter: function beforeEnter(to, from) {
     var token = localStorage.getItem('userToken');
 
     if (token == null) {
-      _store__WEBPACK_IMPORTED_MODULE_3__["default"].commit('changeUserStatus', false);
+      _store__WEBPACK_IMPORTED_MODULE_4__["default"].commit('changeUserStatus', false);
       router.push({
         path: '/login'
       });
     } else {
-      var config = {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      };
-      axios.get('/api/v1/checkToken').then(function (IfTokenIsValid) {
+      _axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_2__["default"].get('/checkToken').then(function (IfTokenIsValid) {
         if (!IfTokenIsValid) {
-          _store__WEBPACK_IMPORTED_MODULE_3__["default"].commit('changeUserStatus', false);
-          localStorage.clear();
+          _store__WEBPACK_IMPORTED_MODULE_4__["default"].commit('changeUserStatus', false);
+          localStorage.removeItem('userToken');
           router.push({
             path: '/login'
           });
         } else {
-          _store__WEBPACK_IMPORTED_MODULE_3__["default"].commit('changeUserStatus', true);
+          _store__WEBPACK_IMPORTED_MODULE_4__["default"].commit('changeUserStatus', true);
           return true;
         }
       });
     }
   }
 }];
-var router = (0,vue_router__WEBPACK_IMPORTED_MODULE_4__.createRouter)({
+var router = (0,vue_router__WEBPACK_IMPORTED_MODULE_5__.createRouter)({
   // 4. Provide the history implementation to use. We are using the hash history for simplicity here.
-  history: (0,vue_router__WEBPACK_IMPORTED_MODULE_4__.createWebHistory)(),
+  history: (0,vue_router__WEBPACK_IMPORTED_MODULE_5__.createWebHistory)(),
   routes: routes // short for `routes: routes`
 
 });
@@ -20779,9 +20829,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
+/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
 /* harmony import */ var _router__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../router */ "./resources/js/router/index.js");
-/* harmony import */ var _axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../axios/sendRequestWithBearer */ "./resources/js/axios/sendRequestWithBearer.js");
+/* harmony import */ var laravel_echo__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! laravel-echo */ "./node_modules/laravel-echo/dist/echo.js");
+/* harmony import */ var _axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../axios/sendRequestWithBearer */ "./resources/js/axios/sendRequestWithBearer.js");
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */ _regeneratorRuntime = function _regeneratorRuntime() { return exports; }; var exports = {}, Op = Object.prototype, hasOwn = Op.hasOwnProperty, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag"; function define(obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: !0, configurable: !0, writable: !0 }), obj[key]; } try { define({}, ""); } catch (err) { define = function define(obj, key, value) { return obj[key] = value; }; } function wrap(innerFn, outerFn, self, tryLocsList) { var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator, generator = Object.create(protoGenerator.prototype), context = new Context(tryLocsList || []); return generator._invoke = function (innerFn, self, context) { var state = "suspendedStart"; return function (method, arg) { if ("executing" === state) throw new Error("Generator is already running"); if ("completed" === state) { if ("throw" === method) throw arg; return doneResult(); } for (context.method = method, context.arg = arg;;) { var delegate = context.delegate; if (delegate) { var delegateResult = maybeInvokeDelegate(delegate, context); if (delegateResult) { if (delegateResult === ContinueSentinel) continue; return delegateResult; } } if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) { if ("suspendedStart" === state) throw state = "completed", context.arg; context.dispatchException(context.arg); } else "return" === context.method && context.abrupt("return", context.arg); state = "executing"; var record = tryCatch(innerFn, self, context); if ("normal" === record.type) { if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue; return { value: record.arg, done: context.done }; } "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg); } }; }(innerFn, self, context), generator; } function tryCatch(fn, obj, arg) { try { return { type: "normal", arg: fn.call(obj, arg) }; } catch (err) { return { type: "throw", arg: err }; } } exports.wrap = wrap; var ContinueSentinel = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var IteratorPrototype = {}; define(IteratorPrototype, iteratorSymbol, function () { return this; }); var getProto = Object.getPrototypeOf, NativeIteratorPrototype = getProto && getProto(getProto(values([]))); NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype); var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype); function defineIteratorMethods(prototype) { ["next", "throw", "return"].forEach(function (method) { define(prototype, method, function (arg) { return this._invoke(method, arg); }); }); } function AsyncIterator(generator, PromiseImpl) { function invoke(method, arg, resolve, reject) { var record = tryCatch(generator[method], generator, arg); if ("throw" !== record.type) { var result = record.arg, value = result.value; return value && "object" == _typeof(value) && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) { invoke("next", value, resolve, reject); }, function (err) { invoke("throw", err, resolve, reject); }) : PromiseImpl.resolve(value).then(function (unwrapped) { result.value = unwrapped, resolve(result); }, function (error) { return invoke("throw", error, resolve, reject); }); } reject(record.arg); } var previousPromise; this._invoke = function (method, arg) { function callInvokeWithMethodAndArg() { return new PromiseImpl(function (resolve, reject) { invoke(method, arg, resolve, reject); }); } return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); }; } function maybeInvokeDelegate(delegate, context) { var method = delegate.iterator[context.method]; if (undefined === method) { if (context.delegate = null, "throw" === context.method) { if (delegate.iterator["return"] && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method)) return ContinueSentinel; context.method = "throw", context.arg = new TypeError("The iterator does not provide a 'throw' method"); } return ContinueSentinel; } var record = tryCatch(method, delegate.iterator, context.arg); if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel; var info = record.arg; return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel); } function pushTryEntry(locs) { var entry = { tryLoc: locs[0] }; 1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry); } function resetTryEntry(entry) { var record = entry.completion || {}; record.type = "normal", delete record.arg, entry.completion = record; } function Context(tryLocsList) { this.tryEntries = [{ tryLoc: "root" }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0); } function values(iterable) { if (iterable) { var iteratorMethod = iterable[iteratorSymbol]; if (iteratorMethod) return iteratorMethod.call(iterable); if ("function" == typeof iterable.next) return iterable; if (!isNaN(iterable.length)) { var i = -1, next = function next() { for (; ++i < iterable.length;) { if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next; } return next.value = undefined, next.done = !0, next; }; return next.next = next; } } return { next: doneResult }; } function doneResult() { return { value: undefined, done: !0 }; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, define(Gp, "constructor", GeneratorFunctionPrototype), define(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) { var ctor = "function" == typeof genFun && genFun.constructor; return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name)); }, exports.mark = function (genFun) { return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun; }, exports.awrap = function (arg) { return { __await: arg }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () { return this; }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) { void 0 === PromiseImpl && (PromiseImpl = Promise); var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl); return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) { return result.done ? result.value : iter.next(); }); }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () { return this; }), define(Gp, "toString", function () { return "[object Generator]"; }), exports.keys = function (object) { var keys = []; for (var key in object) { keys.push(key); } return keys.reverse(), function next() { for (; keys.length;) { var key = keys.pop(); if (key in object) return next.value = key, next.done = !1, next; } return next.done = !0, next; }; }, exports.values = values, Context.prototype = { constructor: Context, reset: function reset(skipTempReset) { if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) { "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined); } }, stop: function stop() { this.done = !0; var rootRecord = this.tryEntries[0].completion; if ("throw" === rootRecord.type) throw rootRecord.arg; return this.rval; }, dispatchException: function dispatchException(exception) { if (this.done) throw exception; var context = this; function handle(loc, caught) { return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught; } for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i], record = entry.completion; if ("root" === entry.tryLoc) return handle("end"); if (entry.tryLoc <= this.prev) { var hasCatch = hasOwn.call(entry, "catchLoc"), hasFinally = hasOwn.call(entry, "finallyLoc"); if (hasCatch && hasFinally) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } else if (hasCatch) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); } else { if (!hasFinally) throw new Error("try statement without catch or finally"); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } } } }, abrupt: function abrupt(type, arg) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) { var finallyEntry = entry; break; } } finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null); var record = finallyEntry ? finallyEntry.completion : {}; return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record); }, complete: function complete(record, afterLoc) { if ("throw" === record.type) throw record.arg; return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel; }, finish: function finish(finallyLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel; } }, "catch": function _catch(tryLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc === tryLoc) { var record = entry.completion; if ("throw" === record.type) { var thrown = record.arg; resetTryEntry(entry); } return thrown; } } throw new Error("illegal catch attempt"); }, delegateYield: function delegateYield(iterable, resultName, nextLoc) { return this.delegate = { iterator: values(iterable), resultName: resultName, nextLoc: nextLoc }, "next" === this.method && (this.arg = undefined), ContinueSentinel; } }, exports; }
@@ -20793,7 +20844,8 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 
 
-var store = (0,vuex__WEBPACK_IMPORTED_MODULE_2__.createStore)({
+
+var store = (0,vuex__WEBPACK_IMPORTED_MODULE_3__.createStore)({
   state: function state() {
     return {
       UserLogedIn: false,
@@ -20875,7 +20927,7 @@ var store = (0,vuex__WEBPACK_IMPORTED_MODULE_2__.createStore)({
               case 0:
                 commit = _ref5.commit, state = _ref5.state;
                 token = localStorage.getItem('userToken');
-                _axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_1__["default"].post('/logout').then(function (IfEverythingWentRight) {
+                _axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_2__["default"].post('/logout').then(function (IfEverythingWentRight) {
                   if (IfEverythingWentRight) {
                     localStorage.clear();
                     commit('changeUserStatus', false);
@@ -20916,7 +20968,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.username[data-v-7ffe2cab]{\n        display: flex;\n        flex-direction: row;\n        flex-wrap: nowrap;\n        justify-content: space-between;\n}\n.fromMe[data-v-7ffe2cab]{\n        float: right;\n        clear: both;\n}\n.toMe[data-v-7ffe2cab]{\n        float: left;\n        clear: both;\n}\n.sendMessage[data-v-7ffe2cab]{\n        width: 100%;\n        height: 25%;\n}\n.sendMessage button[data-v-7ffe2cab]{\n        width: 20%;\n        margin: 0px 0px 0px 0px ;\n}\n.chat[data-v-7ffe2cab]{\n        margin-top: 25%;\n        display: inline-flex;\n        flex-direction: column;\n        border: 2px solid black;\n        width: 20%;\n        height: 60%;\n}\n.messages[data-v-7ffe2cab]{\n        overflow-y: scroll;\n        /*overflow: hidden;*/\n        margin: 0px 0px 0px 0px ;\n        height: 80%;\n        width: 100%;\n        background-color: #cbd5e0;\n}\n.messages p[data-v-7ffe2cab]{\n        font-weight: normal;\n        background-color: aqua;\n        width: -webkit-fit-content;\n        width: -moz-fit-content;\n        width: fit-content;\n        border-radius:10% ;\n}\ninput[data-v-7ffe2cab]{\n        background-color: #a0aec0;\n        width: 80%;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n.username[data-v-7ffe2cab]{\n        display: flex;\n        flex-direction: row;\n        flex-wrap: nowrap;\n        justify-content: space-between;\n}\n.fromMe[data-v-7ffe2cab]{\n        float: right;\n        clear: both;\n}\n.toMe[data-v-7ffe2cab]{\n        float: left;\n        clear: both;\n}\n.sendMessage[data-v-7ffe2cab]{\n        width: 100%;\n        height: 25%;\n}\n.sendMessage button[data-v-7ffe2cab]{\n        width: 20%;\n        margin: 0px 0px 0px 0px ;\n}\n.chat[data-v-7ffe2cab]{\n        margin-top: 25%;\n        display: inline-flex;\n        flex-direction: column;\n        justify-content: space-evenly;\n        border: 2px solid black;\n        width: 20%;\n        height: 60%;\n        position: relative;\n}\n.messages[data-v-7ffe2cab]{\n        overflow-y: scroll;\n        overflow-x: hidden;\n        margin: 0px 0px 0px 0px ;\n        height: 80%;\n        width: 100%;\n        background-color: #cbd5e0;\n}\n.messages p[data-v-7ffe2cab]{\n        font-weight: normal;\n        background-color: aqua;\n        width: -webkit-fit-content;\n        width: -moz-fit-content;\n        width: fit-content;\n        border-radius:10% ;\n}\n.typing[data-v-7ffe2cab]{\n        background-color:chartreuse;\n        width: 100%;\n        height: 15px;\n        font-size: 15px;\n}\ninput[data-v-7ffe2cab]{\n        background-color: #a0aec0;\n        width: 80%;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

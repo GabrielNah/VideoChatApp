@@ -164,7 +164,7 @@ class AuthController extends BaseController
      */
     public function getLoggedInUser(Request $request)
     {
-        return $this->responseOk(JsonResource::make(['user'=>$request->user()]));
+        return $this->responseOk(JsonResource::make(['user'=>new UserResource($request->user())]));
     }
 
     /**

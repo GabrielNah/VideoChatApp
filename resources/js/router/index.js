@@ -1,6 +1,7 @@
 import LoginComponent from "../../Component/LoginComponent";
 import RegisterComponent from "../../Component/RegisterComponent";
 import {createRouter,createWebHistory} from "vue-router";
+import sendRequestWithBerarer from "../axios/sendRequestWithBearer";
 import Dashboard from "../../Component/Dashboard";
 import store from "../store";
 const routes=[
@@ -14,15 +15,10 @@ const routes=[
                 store.commit('changeUserStatus',false)
                 return true;
             }else {
-                let config={
-                    headers: {
-                        'Authorization': 'Bearer ' + token
-                    }
-                }
-                axios.get('/api/v1/checkToken').then((IfTokenIsValid)=>{
+                sendRequestWithBerarer.get('/checkToken').then((IfTokenIsValid)=>{
                     if(!IfTokenIsValid){
                         store.commit('changeUserStatus',false);
-                        localStorage.clear();
+                        localStorage.removeItem('userToken');
                         return true;
                     }else {
                         store.commit('changeUserStatus',true)
@@ -43,14 +39,10 @@ const routes=[
                 store.commit('changeUserStatus',false)
                 return true;
             }else {
-                let config={
-                    headers: {
-                        'Authorization': 'Bearer ' + token
-                    }
-                }
-                axios.get('/api/v1/checkToken').then((IfTokenIsValid)=>{
+
+                sendRequestWithBerarer.get('/checkToken').then((IfTokenIsValid)=>{
                     if(!IfTokenIsValid){
-                        localStorage.clear()
+                        localStorage.removeItem('userToken');
                         store.commit('changeUserStatus',false)
                         return true;
                     }else {
@@ -71,15 +63,10 @@ const routes=[
                 store.commit('changeUserStatus',false)
                router.push({path:'/login'})
             }else {
-                let config={
-                    headers: {
-                        'Authorization': 'Bearer ' + token
-                    }
-                }
-                axios.get('/api/v1/checkToken').then((IfTokenIsValid)=>{
+                sendRequestWithBerarer.get('/checkToken').then((IfTokenIsValid)=>{
                     if(!IfTokenIsValid){
                         store.commit('changeUserStatus',false)
-                        localStorage.clear()
+                        localStorage.removeItem('userToken')
                         router.push({path:'/login'})
                     }else {
                         store.commit('changeUserStatus',true)

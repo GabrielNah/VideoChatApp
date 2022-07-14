@@ -15,6 +15,10 @@ use Illuminate\Routing\Controller as BaseController;
  *     name="Actions of Register",
  *     description="Actions of Authintification"
  * ),
+ * @OA\Tag(
+ *     name="Chat`s Routes",
+ *     description="Actions of Authintification"
+ * ),
  * @OA\Server(
  *     description="Server for production",
  *     url="http://127.0.0.1:8000/api/v1"

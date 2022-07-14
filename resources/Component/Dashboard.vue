@@ -10,7 +10,7 @@
             <div class="users">
                 <p v-for="(friend,index) in friends" @click="openChat(index)"   :class="{active:friend.is_active!='0'}">{{friend.name}}</p>
             </div>
-            <chat-component @closeChat="closeChat" :usersData="usersWithOpenChat[index]" :usersIds="chat" :newMessage="(receivedNewMessage && index==rightChatIndex ) ? newMessage : null" v-for="(chat,index) in chats"></chat-component>
+            <chat-component @closeChat="closeChat" :usersData="usersWithOpenChat[index]" :usersIds="chat"  v-for="(chat,index) in chats"></chat-component>
         </div>
 
     </div>
@@ -31,48 +31,57 @@
               receivedNewMessage:false,
               newMessage:null,
               rightChatIndex:null,
-              usersWithOpenChat:[]
+              usersWithOpenChat:[],
+              chatChannel:null,
+              userStateChannel:null,
           }
         },
         methods:{
             closeChat(chatsArray){
                 console.log(chatsArray)
-                let indexOfChatsArray=this.chats.indexOf(chatsArray)
+                let indexOfChatsArray=this.getChatsIndex(chatsArray);
                 this.chats.splice(indexOfChatsArray,1);
                 let indexOfFriend=this.usersWithOpenChat.indexOf(chatsArray[0]);
                 this.usersWithOpenChat.splice(indexOfFriend,1)
 
             },
-            checkIfItsRirghtChat(fromUser,message){
-                let currentUser=this.user.id;
-                let idsOfUsers=[];
-                idsOfUsers.push(fromUser);
-                idsOfUsers.push(currentUser);
-                this.chats.forEach((chat,index)=>{
-                    if(JSON.stringify(chat)==JSON.stringify(idsOfUsers)){
-                        this.rightChatIndex=index;
-                        this.newMessage=message;
-                        this.receivedNewMessage=true;
-                        console.log(this.rightChatIndex,this.newMessage,this.receivedNewMessage);
+            getChatsIndex(chat){
+                let chatIndex;
+                this.chats.forEach((chatItem,indexOfChat)=>{
+                    if(JSON.stringify(chatItem)==JSON.stringify(chat)){
+                        chatIndex=indexOfChat;
                     }
                 })
+                return chatIndex;
+            },
+            checkIfChatIsOpen(chat){
+               return  this.chats.some((chatItem,index)=>JSON.stringify(chatItem) == JSON.stringify(chat))
+            },
+            setUserActiveState(userIndex){
+                this.friends[userIndex].is_active=true
+            },
+            setUserInctiveState(userIndex){
+                this.friends[userIndex].is_active=false
+            },
+            getUsersIndexById(id){
+                let userIndex;
+                this.friends.forEach((friend,indexOfFriend)=>{
+                    if(friend.id==id){
+                        userIndex=indexOfFriend
+                    }
+                })
+                return userIndex;
             },
             showMessageInChat(friendId,message){
                 let currentUserId=this.user.id;
                 let idsOfUsers=[];
                 idsOfUsers.push(friendId);
                 idsOfUsers.push(currentUserId);
-                let ifTheChatIsOpen=false;
-                this.chats.forEach((chat)=>{
-                    if(JSON.stringify(chat)==JSON.stringify(idsOfUsers)){
-                        ifTheChatIsOpen=true;
-                    }
-                })
-                if(!ifTheChatIsOpen){
+
+                if(!this.checkIfChatIsOpen(idsOfUsers)){
                     this.chats.push(idsOfUsers);
-                }
-                if(ifTheChatIsOpen){
-                    this.checkIfItsRirghtChat(friendId,message);
+                    let friendUser=this.friends.filter(usersData=>usersData.id=friendId);
+                    this.usersWithOpenChat.push(friendUser[0])
                 }
 
             },
@@ -80,16 +89,13 @@
                 let anotherUserId=this.friends[someUsersIndex].id
                 let chat=[];
                 chat.push(anotherUserId);
-                chat.push(this.user.id)
-                let ifChatIsOpen=this.chats.some((chatItem)=>{
-                    return JSON.stringify(chat)==JSON.stringify(chatItem)
-                });
-                if(!ifChatIsOpen){
+                chat.push(this.user.id);
+                if(!this.checkIfChatIsOpen(chat)){
                     this.chats.push(chat)
                     this.usersWithOpenChat.push(this.friends[someUsersIndex])
                 }
 
-            }
+            },
         },
         async beforeCreate(){
                await sendRequestWithBerarer.get('/user',).then((usersData)=>{
@@ -104,17 +110,26 @@
 
              },
          mounted() {
-            Echo.private('chat-channel.'+this.user.id).
-            listen('SendMessageEvent',(chatMessage)=>{
+            let chatChannel=Echo.private('chat-channel.'+this.user.id);
+            this.chatChannel=chatChannel;
+            let userStateChannel=Echo.private('activeUsers');
+            this.userStateChannel=userStateChannel;
+
+            chatChannel.listen('SendMessageEvent',(chatMessage)=>{
                 console.log(chatMessage)
                     this.showMessageInChat(chatMessage.from,chatMessage.message);
 
             })
-             Echo.private('activeUsers').listen('userIsActive',(e)=>{
-                 console.log(e)
-             }).listen('userIsInactive',(e)=>{
-                 console.log(e)
+             userStateChannel.listen('UserIsInactiveEvent',(inactiveUser)=>{
+                 console.log(inactiveUser)
+                 let userIndex=this.getUsersIndexById(inactiveUser.inactive_user);
+                 this.setUserInctiveState(userIndex);
+             }).listen('UserIsActiveEvent',(activeUser)=>{
+                 console.log(activeUser)
+                 let userIndex=this.getUsersIndexById(activeUser.active_user);
+                 this.setUserActiveState(userIndex);
              })
+
         }
 
 

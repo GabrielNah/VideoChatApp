@@ -1,5 +1,6 @@
 import {createStore} from "vuex";
 import router from "../router";
+import Echo from "laravel-echo";
 import sendRequestWithBerarer from "../axios/sendRequestWithBearer";
 const store = createStore({
     state () {
@@ -7,12 +8,14 @@ const store = createStore({
             UserLogedIn: false,
             registerRequestUrl:'api/v1/register',
             loginRequestUrl:'api/v1/login',
+
         }
     },
     mutations: {
         changeUserStatus (state,Userstate) {
             state.UserLogedIn=Userstate
-        }
+        },
+
     },
     actions:{
        async login({ commit, state },{credentials}){

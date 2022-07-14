@@ -35,11 +35,6 @@ class UserIsActiveEvent implements ShouldBroadcast
         return new PrivateChannel('activeUsers');
     }
 
-    public function broadcastAs()
-    {
-        return 'userIsActive';
-    }
-
     public function broadcastWith()
     {
         return ['active_user'=>$this->user_id];

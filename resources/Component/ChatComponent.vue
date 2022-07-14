@@ -4,9 +4,11 @@
         <div class="messages">
 
             <p v-for="message in messages" :class="{ fromMe:message.from==currentUserId,toMe:message.from!=currentUserId}">{{message.message}}</p>
+
         </div>
+        <p class="typing" v-if="userIsTyping"><b>{{friendsData.name}} is Typing</b></p>
         <div class="sendMessage">
-            <input ref="chatMessage" type="text"><button @click="sendMessage">Send</button>
+            <input ref="chatMessage" @keydown="sendTypingEvent" type="text"><button @click="sendMessage">Send</button>
         </div>
     </div>
 </template>
@@ -15,38 +17,47 @@
     import sendRequestWithBerarer from "../js/axios/sendRequestWithBearer";
     export default {
         name: "ChatComponent",
-        props:['usersIds','newMessage','usersData'],
+        props:['usersIds','newChatMessage','usersData'],
         data(){
             return{
-                currentUserId:null,
-                anotherUserId:null,
+                currentUserId:this.usersIds[1],
+                anotherUserId:this.usersIds[0],
                 messages:[],
-                newMessage:this.newMessage,
-                friendsData:this.usersData
+                newMessage:this.newChatMessage,
+                friendsData:this.usersData,
+                activeUsersChannel:null,
+                userIsTyping:false,
             }
-        },
-        watch:{
-            newMessage: {
-                handler(newMessage, childMessage) {
-                    let messageData = {
-                        from: this.anotherUserId,
-                        to: this.currentUserId,
-                        message: newMessage
-                    }
-                    this.messages.push(messageData)
-                },
-                deep:true
-            },
-
         },
         methods:{
             async getChatMessages(ChatIndex){
-                this.currentUserId=this.usersIds[1];
-                this.anotherUserId=this.usersIds[0];
                 await sendRequestWithBerarer.post('/chat',{to:this.anotherUserId,from:this.currentUserId})
                     .then(chatMessages=> {
-                       this.messages=chatMessages.data
+                       this.messages=chatMessages.data;
+
                     })
+            },
+            sendTypingEvent(){
+                setTimeout( () => {
+                    this.activeUsersChannel.whisper('typing', {
+                        user: this.currentUserId,
+                        typing: true
+                    })
+                }, 300)
+            },
+            showUserIsTypingMessage(typingMessage){
+                console.log(typingMessage)
+                if(this.anotherUserId == typingMessage.user){
+                    this.userIsTyping=true;
+                    setTimeout( ()=>{
+                        this.userIsTyping=false;
+                    }, 1000)
+                }
+            },
+            catchTypingEvent(){
+                this.activeUsersChannel.listenForWhisper('typing',(typingMessage)=>{
+                    this.showUserIsTypingMessage(typingMessage)
+                })
             },
             async sendMessage(){
                 let message=this.$refs.chatMessage.value
@@ -59,15 +70,35 @@
                     this.$refs.chatMessage.value='';
                     await sendRequestWithBerarer.post('/message',data).then(sendedMessage=>{
                         this.messages.push(sendedMessage.data);
+
                     });
                 }
 
 
+            },
+            changeScrollPosition(){
+                document.querySelector('.messages').scrollBy(0,document.querySelector('.messages').scrollHeight)
+
+            },
+            listenForLiveMessages(){
+                Echo.private('chat-channel.'+this.currentUserId).
+                listen('SendMessageEvent',(chatMessage)=>{
+                    console.log(chatMessage)
+                    chatMessage.to=this.currentUserId;
+                    this.messages.push(chatMessage);
+
+                })
             }
         },
         async created() {
 
-            await this.getChatMessages()
+            await this.getChatMessages();
+            await this.changeScrollPosition();
+        },
+        mounted() {
+            this.activeUsersChannel=Echo.private('activeUsers');
+            this.listenForLiveMessages();
+            this.catchTypingEvent();
 
         }
     }
@@ -100,13 +131,15 @@
         margin-top: 25%;
         display: inline-flex;
         flex-direction: column;
+        justify-content: space-evenly;
         border: 2px solid black;
         width: 20%;
         height: 60%;
+        position: relative;
     }
     .messages{
         overflow-y: scroll;
-        /*overflow: hidden;*/
+        overflow-x: hidden;
         margin: 0px 0px 0px 0px ;
         height: 80%;
         width: 100%;
@@ -117,6 +150,12 @@
         background-color: aqua;
         width: fit-content;
         border-radius:10% ;
+    }
+    .typing{
+        background-color:chartreuse;
+        width: 100%;
+        height: 15px;
+        font-size: 15px;
     }
     input{
         background-color: #a0aec0;

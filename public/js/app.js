@@ -19760,8 +19760,19 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     };
   },
   methods: {
-    getChatMessages: function getChatMessages(ChatIndex) {
+    sendVideoCallRequest: function sendVideoCallRequest() {
       var _this = this;
+
+      setTimeout(function () {
+        _this.activeUsersChannel.whisper('calling', {
+          caller: _this.currentUserId,
+          callingTo: _this.anotherUserId
+        });
+      }, 300);
+      this.$emit('sendCall', this.anotherUserId);
+    },
+    getChatMessages: function getChatMessages(ChatIndex) {
+      var _this2 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
         return _regeneratorRuntime().wrap(function _callee$(_context) {
@@ -19770,10 +19781,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
               case 0:
                 _context.next = 2;
                 return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].post('/chat', {
-                  to: _this.anotherUserId,
-                  from: _this.currentUserId
+                  to: _this2.anotherUserId,
+                  from: _this2.currentUserId
                 }).then(function (chatMessages) {
-                  _this.messages = chatMessages.data;
+                  _this2.messages = chatMessages.data;
                 });
 
               case 2:
@@ -19785,36 +19796,36 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       }))();
     },
     sendTypingEvent: function sendTypingEvent() {
-      var _this2 = this;
+      var _this3 = this;
 
       setTimeout(function () {
-        _this2.activeUsersChannel.whisper('typing', {
-          user: _this2.currentUserId,
+        _this3.activeUsersChannel.whisper('typing', {
+          user: _this3.currentUserId,
           typing: true
         });
       }, 300);
     },
     showUserIsTypingMessage: function showUserIsTypingMessage(typingMessage) {
-      var _this3 = this;
+      var _this4 = this;
 
       console.log(typingMessage);
 
       if (this.anotherUserId == typingMessage.user) {
         this.userIsTyping = true;
         setTimeout(function () {
-          _this3.userIsTyping = false;
+          _this4.userIsTyping = false;
         }, 1000);
       }
     },
     catchTypingEvent: function catchTypingEvent() {
-      var _this4 = this;
+      var _this5 = this;
 
       this.activeUsersChannel.listenForWhisper('typing', function (typingMessage) {
-        _this4.showUserIsTypingMessage(typingMessage);
+        _this5.showUserIsTypingMessage(typingMessage);
       });
     },
     sendMessage: function sendMessage() {
-      var _this5 = this;
+      var _this6 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
         var message, data;
@@ -19822,7 +19833,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                message = _this5.$refs.chatMessage.value;
+                message = _this6.$refs.chatMessage.value;
 
                 if (!(message != "")) {
                   _context2.next = 6;
@@ -19830,14 +19841,14 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                 }
 
                 data = {
-                  from: _this5.currentUserId,
-                  to: _this5.anotherUserId,
+                  from: _this6.currentUserId,
+                  to: _this6.anotherUserId,
                   message: message
                 };
-                _this5.$refs.chatMessage.value = '';
+                _this6.$refs.chatMessage.value = '';
                 _context2.next = 6;
                 return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].post('/message', data).then(function (sendedMessage) {
-                  _this5.messages.push(sendedMessage.data);
+                  _this6.messages.push(sendedMessage.data);
                 });
 
               case 6:
@@ -19852,18 +19863,18 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       document.querySelector('.messages').scrollBy(0, document.querySelector('.messages').scrollHeight);
     },
     listenForLiveMessages: function listenForLiveMessages() {
-      var _this6 = this;
+      var _this7 = this;
 
       Echo["private"]('chat-channel.' + this.currentUserId).listen('SendMessageEvent', function (chatMessage) {
         console.log(chatMessage);
-        chatMessage.to = _this6.currentUserId;
+        chatMessage.to = _this7.currentUserId;
 
-        _this6.messages.push(chatMessage);
+        _this7.messages.push(chatMessage);
       });
     }
   },
   created: function created() {
-    var _this7 = this;
+    var _this8 = this;
 
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
       return _regeneratorRuntime().wrap(function _callee3$(_context3) {
@@ -19871,11 +19882,11 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           switch (_context3.prev = _context3.next) {
             case 0:
               _context3.next = 2;
-              return _this7.getChatMessages();
+              return _this8.getChatMessages();
 
             case 2:
               _context3.next = 4;
-              return _this7.changeScrollPosition();
+              return _this8.changeScrollPosition();
 
             case 4:
             case "end":
@@ -19907,6 +19918,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../js/axios/sendRequestWithBearer */ "./resources/js/axios/sendRequestWithBearer.js");
 /* harmony import */ var _ChatComponent__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ChatComponent */ "./resources/Component/ChatComponent.vue");
+/* harmony import */ var _VideoCall__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./VideoCall */ "./resources/Component/VideoCall.vue");
+/* harmony import */ var _VideoCallRequest__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./VideoCallRequest */ "./resources/Component/VideoCallRequest.vue");
+/* harmony import */ var _VideoCallRoom__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./VideoCallRoom */ "./resources/Component/VideoCallRoom.vue");
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */ _regeneratorRuntime = function _regeneratorRuntime() { return exports; }; var exports = {}, Op = Object.prototype, hasOwn = Op.hasOwnProperty, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag"; function define(obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: !0, configurable: !0, writable: !0 }), obj[key]; } try { define({}, ""); } catch (err) { define = function define(obj, key, value) { return obj[key] = value; }; } function wrap(innerFn, outerFn, self, tryLocsList) { var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator, generator = Object.create(protoGenerator.prototype), context = new Context(tryLocsList || []); return generator._invoke = function (innerFn, self, context) { var state = "suspendedStart"; return function (method, arg) { if ("executing" === state) throw new Error("Generator is already running"); if ("completed" === state) { if ("throw" === method) throw arg; return doneResult(); } for (context.method = method, context.arg = arg;;) { var delegate = context.delegate; if (delegate) { var delegateResult = maybeInvokeDelegate(delegate, context); if (delegateResult) { if (delegateResult === ContinueSentinel) continue; return delegateResult; } } if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) { if ("suspendedStart" === state) throw state = "completed", context.arg; context.dispatchException(context.arg); } else "return" === context.method && context.abrupt("return", context.arg); state = "executing"; var record = tryCatch(innerFn, self, context); if ("normal" === record.type) { if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue; return { value: record.arg, done: context.done }; } "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg); } }; }(innerFn, self, context), generator; } function tryCatch(fn, obj, arg) { try { return { type: "normal", arg: fn.call(obj, arg) }; } catch (err) { return { type: "throw", arg: err }; } } exports.wrap = wrap; var ContinueSentinel = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var IteratorPrototype = {}; define(IteratorPrototype, iteratorSymbol, function () { return this; }); var getProto = Object.getPrototypeOf, NativeIteratorPrototype = getProto && getProto(getProto(values([]))); NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype); var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype); function defineIteratorMethods(prototype) { ["next", "throw", "return"].forEach(function (method) { define(prototype, method, function (arg) { return this._invoke(method, arg); }); }); } function AsyncIterator(generator, PromiseImpl) { function invoke(method, arg, resolve, reject) { var record = tryCatch(generator[method], generator, arg); if ("throw" !== record.type) { var result = record.arg, value = result.value; return value && "object" == _typeof(value) && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) { invoke("next", value, resolve, reject); }, function (err) { invoke("throw", err, resolve, reject); }) : PromiseImpl.resolve(value).then(function (unwrapped) { result.value = unwrapped, resolve(result); }, function (error) { return invoke("throw", error, resolve, reject); }); } reject(record.arg); } var previousPromise; this._invoke = function (method, arg) { function callInvokeWithMethodAndArg() { return new PromiseImpl(function (resolve, reject) { invoke(method, arg, resolve, reject); }); } return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); }; } function maybeInvokeDelegate(delegate, context) { var method = delegate.iterator[context.method]; if (undefined === method) { if (context.delegate = null, "throw" === context.method) { if (delegate.iterator["return"] && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method)) return ContinueSentinel; context.method = "throw", context.arg = new TypeError("The iterator does not provide a 'throw' method"); } return ContinueSentinel; } var record = tryCatch(method, delegate.iterator, context.arg); if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel; var info = record.arg; return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel); } function pushTryEntry(locs) { var entry = { tryLoc: locs[0] }; 1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry); } function resetTryEntry(entry) { var record = entry.completion || {}; record.type = "normal", delete record.arg, entry.completion = record; } function Context(tryLocsList) { this.tryEntries = [{ tryLoc: "root" }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0); } function values(iterable) { if (iterable) { var iteratorMethod = iterable[iteratorSymbol]; if (iteratorMethod) return iteratorMethod.call(iterable); if ("function" == typeof iterable.next) return iterable; if (!isNaN(iterable.length)) { var i = -1, next = function next() { for (; ++i < iterable.length;) { if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next; } return next.value = undefined, next.done = !0, next; }; return next.next = next; } } return { next: doneResult }; } function doneResult() { return { value: undefined, done: !0 }; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, define(Gp, "constructor", GeneratorFunctionPrototype), define(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) { var ctor = "function" == typeof genFun && genFun.constructor; return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name)); }, exports.mark = function (genFun) { return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun; }, exports.awrap = function (arg) { return { __await: arg }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () { return this; }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) { void 0 === PromiseImpl && (PromiseImpl = Promise); var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl); return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) { return result.done ? result.value : iter.next(); }); }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () { return this; }), define(Gp, "toString", function () { return "[object Generator]"; }), exports.keys = function (object) { var keys = []; for (var key in object) { keys.push(key); } return keys.reverse(), function next() { for (; keys.length;) { var key = keys.pop(); if (key in object) return next.value = key, next.done = !1, next; } return next.done = !0, next; }; }, exports.values = values, Context.prototype = { constructor: Context, reset: function reset(skipTempReset) { if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) { "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined); } }, stop: function stop() { this.done = !0; var rootRecord = this.tryEntries[0].completion; if ("throw" === rootRecord.type) throw rootRecord.arg; return this.rval; }, dispatchException: function dispatchException(exception) { if (this.done) throw exception; var context = this; function handle(loc, caught) { return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught; } for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i], record = entry.completion; if ("root" === entry.tryLoc) return handle("end"); if (entry.tryLoc <= this.prev) { var hasCatch = hasOwn.call(entry, "catchLoc"), hasFinally = hasOwn.call(entry, "finallyLoc"); if (hasCatch && hasFinally) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } else if (hasCatch) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); } else { if (!hasFinally) throw new Error("try statement without catch or finally"); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } } } }, abrupt: function abrupt(type, arg) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) { var finallyEntry = entry; break; } } finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null); var record = finallyEntry ? finallyEntry.completion : {}; return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record); }, complete: function complete(record, afterLoc) { if ("throw" === record.type) throw record.arg; return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel; }, finish: function finish(finallyLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel; } }, "catch": function _catch(tryLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc === tryLoc) { var record = entry.completion; if ("throw" === record.type) { var thrown = record.arg; resetTryEntry(entry); } return thrown; } } throw new Error("illegal catch attempt"); }, delegateYield: function delegateYield(iterable, resultName, nextLoc) { return this.delegate = { iterator: values(iterable), resultName: resultName, nextLoc: nextLoc }, "next" === this.method && (this.arg = undefined), ContinueSentinel; } }, exports; }
@@ -19917,9 +19931,15 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 
 
+
+
+
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   name: "Dashboard",
   components: {
+    VideoCallRoom: _VideoCallRoom__WEBPACK_IMPORTED_MODULE_4__["default"],
+    VideoCallRequest: _VideoCallRequest__WEBPACK_IMPORTED_MODULE_3__["default"],
+    VideoCall: _VideoCall__WEBPACK_IMPORTED_MODULE_2__["default"],
     ChatComponent: _ChatComponent__WEBPACK_IMPORTED_MODULE_1__["default"]
   },
   data: function data() {
@@ -19932,10 +19952,121 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       rightChatIndex: null,
       usersWithOpenChat: [],
       chatChannel: null,
-      userStateChannel: null
+      userStateChannel: null,
+      callerData: null,
+      incomingCall: false,
+      callAndTypingChannel: null,
+      callReceiver: null,
+      outGoingCall: false,
+      onGoingCall: false
     };
   },
   methods: {
+    endCall: function endCall(callPartnerId) {
+      this.userStateChannel.whisper('callEnded', {
+        callEndedBy: this.user.id,
+        callPartnerId: callPartnerId
+      });
+
+      if (this.onGoingCall == "inComing") {
+        this.onGoingCall = false;
+        this.callerData = null;
+      }
+
+      if (this.onGoingCall = "outGoing") {
+        this.onGoingCall = false;
+        this.callReceiver = null;
+      }
+    },
+    handleEndedCalls: function handleEndedCalls() {
+      var _this = this;
+
+      this.userStateChannel.listenForWhisper('callEnded', function (endedCallData) {
+        if (endedCallData.callPartnerId == _this.user.id) {
+          if (_this.onGoingCall == "inComing") {
+            _this.callerData = null;
+          }
+
+          if (_this.onGoingCall = "outGoing") {
+            _this.callReceiver = null;
+          }
+
+          _this.onGoingCall = false;
+        }
+      });
+    },
+    cancelCallRequest: function cancelCallRequest() {
+      this.userStateChannel.whisper('callCanceled', {
+        callTo: this.callReceiver.id,
+        callFrom: this.user.id
+      });
+      this.outGoingCall = false;
+      this.callReceiver = null;
+    },
+    handleCanceledCalls: function handleCanceledCalls() {
+      var _this2 = this;
+
+      this.userStateChannel.listenForWhisper('callCanceled', function (callData) {
+        if (callData.callTo == _this2.user.id) {
+          if (callData.callFrom == _this2.callerData.id) {
+            _this2.incomingCall = false;
+            _this2.callerData = null;
+          }
+        }
+      });
+    },
+    acceptVideoCallRequest: function acceptVideoCallRequest(callFrom) {
+      this.incomingCall = false;
+      this.onGoingCall = "inComing";
+      this.userStateChannel.whisper('callAccepted', {
+        callFrom: callFrom,
+        acceptedFrom: this.user.id
+      });
+    },
+    handleAcceptedVideoCallRequest: function handleAcceptedVideoCallRequest() {
+      var _this3 = this;
+
+      this.userStateChannel.listenForWhisper('callAccepted', function (acceptedCallData) {
+        if (_this3.user.id == acceptedCallData.callFrom) {
+          if (_this3.callReceiver.id == acceptedCallData.acceptedFrom) {
+            _this3.onGoingCall = "outGoing";
+            _this3.outGoingCall = false;
+          }
+        }
+      });
+    },
+    handleRejectedVideoCallRequest: function handleRejectedVideoCallRequest() {
+      var _this4 = this;
+
+      this.userStateChannel.listenForWhisper('callRejected', function (rejectedCallData) {
+        if (rejectedCallData.rejectedCallOf == _this4.user.id) {
+          if (rejectedCallData.rejectedFrom == _this4.callReceiver.id) {
+            _this4.outGoingCall = false;
+            _this4.callReceiver = null;
+          }
+        }
+      });
+    },
+    rejectVideoCallRequest: function rejectVideoCallRequest(rejectedCallOf) {
+      this.userStateChannel.whisper('callRejected', {
+        rejectedFrom: this.user.id,
+        rejectedCallOf: rejectedCallOf
+      });
+      this.incomingCall = false;
+      this.callerData = null;
+    },
+    sendCallRequest: function sendCallRequest(userId) {
+      var user = this.friends[this.getUsersIndexById(userId)];
+      this.callReceiver = user;
+      this.outGoingCall = true;
+    },
+    receiveCalls: function receiveCalls(videoChatRequest) {
+      if (videoChatRequest.callingTo == this.user.id) {
+        var caller = this.getUsersIndexById(videoChatRequest.caller);
+        this.callerData = this.friends[caller];
+        this.incomingCall = true;
+      }
+    },
     closeChat: function closeChat(chatsArray) {
       console.log(chatsArray);
       var indexOfChatsArray = this.getChatsIndex(chatsArray);
@@ -19996,10 +20127,45 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         this.chats.push(chat);
         this.usersWithOpenChat.push(this.friends[someUsersIndex]);
       }
+    },
+    catchVideoCalls: function catchVideoCalls() {
+      var _this5 = this;
+
+      this.userStateChannel.listenForWhisper('calling', function (callMessage) {
+        console.log(callMessage);
+
+        _this5.receiveCalls(callMessage);
+      });
+    },
+    handleIncomingMessages: function handleIncomingMessages() {
+      var _this6 = this;
+
+      this.chatChannel.listen('SendMessageEvent', function (chatMessage) {
+        console.log(chatMessage);
+
+        _this6.showMessageInChat(chatMessage.from, chatMessage.message);
+      });
+    },
+    handleUsersState: function handleUsersState() {
+      var _this7 = this;
+
+      this.userStateChannel.listen('UserIsInactiveEvent', function (inactiveUser) {
+        console.log(inactiveUser);
+
+        var userIndex = _this7.getUsersIndexById(inactiveUser.inactive_user);
+
+        _this7.setUserInctiveState(userIndex);
+      }).listen('UserIsActiveEvent', function (activeUser) {
+        console.log(activeUser);
+
+        var userIndex = _this7.getUsersIndexById(activeUser.active_user);
+
+        _this7.setUserActiveState(userIndex);
+      });
     }
   },
   beforeCreate: function beforeCreate() {
-    var _this = this;
+    var _this8 = this;
 
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
       return _regeneratorRuntime().wrap(function _callee$(_context) {
@@ -20009,14 +20175,14 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
               _context.next = 2;
               return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].get('/user').then(function (usersData) {
                 console.log(usersData);
-                _this.user = usersData.data.user;
+                _this8.user = usersData.data.user;
               });
 
             case 2:
               _context.next = 4;
               return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].get('/users').then(function (allUsers) {
                 console.log(allUsers);
-                _this.friends = allUsers.data;
+                _this8.friends = allUsers.data;
               });
 
             case 4:
@@ -20028,30 +20194,15 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     }))();
   },
   mounted: function mounted() {
-    var _this2 = this;
-
-    var chatChannel = Echo["private"]('chat-channel.' + this.user.id);
-    this.chatChannel = chatChannel;
-    var userStateChannel = Echo["private"]('activeUsers');
-    this.userStateChannel = userStateChannel;
-    chatChannel.listen('SendMessageEvent', function (chatMessage) {
-      console.log(chatMessage);
-
-      _this2.showMessageInChat(chatMessage.from, chatMessage.message);
-    });
-    userStateChannel.listen('UserIsInactiveEvent', function (inactiveUser) {
-      console.log(inactiveUser);
-
-      var userIndex = _this2.getUsersIndexById(inactiveUser.inactive_user);
-
-      _this2.setUserInctiveState(userIndex);
-    }).listen('UserIsActiveEvent', function (activeUser) {
-      console.log(activeUser);
-
-      var userIndex = _this2.getUsersIndexById(activeUser.active_user);
-
-      _this2.setUserActiveState(userIndex);
-    });
+    this.chatChannel = Echo["private"]('chat-channel.' + this.user.id);
+    this.userStateChannel = Echo["private"]('activeUsers');
+    this.handleIncomingMessages();
+    this.handleUsersState();
+    this.catchVideoCalls();
+    this.handleCanceledCalls();
+    this.handleRejectedVideoCallRequest();
+    this.handleAcceptedVideoCallRequest();
+    this.handleEndedCalls();
   }
 });
 
@@ -20190,6 +20341,79 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=script&lang=js":
+/*!***********************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=script&lang=js ***!
+  \***********************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  name: "VideoCall",
+  props: ['user'],
+  methods: {
+    acceptVideoCall: function acceptVideoCall() {
+      this.$emit('callAccepted', this.user.id);
+    },
+    rejectVideoCall: function rejectVideoCall() {
+      this.$emit('callRejected', this.user.id);
+    }
+  }
+});
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=script&lang=js":
+/*!******************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=script&lang=js ***!
+  \******************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  name: "VideoCallRequest",
+  props: ['userData']
+});
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRoom.vue?vue&type=script&lang=js":
+/*!***************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRoom.vue?vue&type=script&lang=js ***!
+  \***************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  name: "VideoCallRoom",
+  props: ['user', 'callPartner'],
+  data: function data() {
+    return {
+      localTracks: [],
+      remoteUsers: [],
+      app_id: "b5c8c3df2621406a80e2f2d616971085",
+      token: "b5c8c3df2621406a80e2f2d616971085",
+      channel: "MyAppChannel",
+      UID: null,
+      client: null
+    };
+  }
+});
+
+/***/ }),
+
 /***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/ChatComponent.vue?vue&type=template&id=7ffe2cab&scoped=true":
 /*!*******************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/ChatComponent.vue?vue&type=template&id=7ffe2cab&scoped=true ***!
@@ -20228,7 +20452,11 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.friendsData.name), 1
   /* TEXT */
   ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    onClick: _cache[0] || (_cache[0] = function ($event) {
+    onClick: _cache[0] || (_cache[0] = function () {
+      return $options.sendVideoCallRequest && $options.sendVideoCallRequest.apply($options, arguments);
+    })
+  }, "Call"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    onClick: _cache[1] || (_cache[1] = function ($event) {
       return _ctx.$emit('closeChat', $props.usersIds);
     })
   }, "✕")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.messages, function (message) {
@@ -20246,14 +20474,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   /* TEXT */
   )])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     ref: "chatMessage",
-    onKeydown: _cache[1] || (_cache[1] = function () {
+    onKeydown: _cache[2] || (_cache[2] = function () {
       return $options.sendTypingEvent && $options.sendTypingEvent.apply($options, arguments);
     }),
     type: "text"
   }, null, 544
   /* HYDRATE_EVENTS, NEED_PATCH */
   ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    onClick: _cache[2] || (_cache[2] = function () {
+    onClick: _cache[3] || (_cache[3] = function () {
       return $options.sendMessage && $options.sendMessage.apply($options, arguments);
     })
   }, "Send")])]);
@@ -20293,11 +20521,37 @@ var _hoisted_4 = {
 };
 var _hoisted_5 = ["onClick"];
 function render(_ctx, _cache, $props, $setup, $data, $options) {
+  var _component_video_call_room = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("video-call-room");
+
+  var _component_video_call = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("video-call");
+
+  var _component_video_call_request = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("video-call-request");
+
   var _component_chat_component = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("chat-component");
 
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, " privet user " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.user.name), 1
   /* TEXT */
-  )]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.friends, function (friend, index) {
+  )]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [$data.onGoingCall ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_video_call_room, {
+    key: 0,
+    onCallEnded: $options.endCall,
+    user: $data.user,
+    callPartner: $data.onGoingCall == 'inComing' ? $data.callerData : $data.callReceiver
+  }, null, 8
+  /* PROPS */
+  , ["onCallEnded", "user", "callPartner"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.incomingCall ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_video_call, {
+    key: 1,
+    onCallRejected: $options.rejectVideoCallRequest,
+    onCallAccepted: $options.acceptVideoCallRequest,
+    user: $data.callerData
+  }, null, 8
+  /* PROPS */
+  , ["onCallRejected", "onCallAccepted", "user"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.outGoingCall ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_video_call_request, {
+    key: 2,
+    onCancelCall: $options.cancelCallRequest,
+    userData: $data.callReceiver
+  }, null, 8
+  /* PROPS */
+  , ["onCancelCall", "userData"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.friends, function (friend, index) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", {
       onClick: function onClick($event) {
         return $options.openChat(index);
@@ -20312,12 +20566,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   /* UNKEYED_FRAGMENT */
   ))]), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.chats, function (chat, index) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_chat_component, {
+      onSendCall: $options.sendCallRequest,
+      onCalling: $options.receiveCalls,
       onCloseChat: $options.closeChat,
       usersData: $data.usersWithOpenChat[index],
       usersIds: chat
     }, null, 8
     /* PROPS */
-    , ["onCloseChat", "usersData", "usersIds"]);
+    , ["onSendCall", "onCalling", "onCloseChat", "usersData", "usersIds"]);
   }), 256
   /* UNKEYED_FRAGMENT */
   ))])]);
@@ -20619,6 +20875,97 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return $options.sendRegisterRequest && $options.sendRegisterRequest.apply($options, arguments);
     }, ["prevent"]))
   }, " Register")])])])])]);
+}
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true":
+/*!***************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "render": () => (/* binding */ render)
+/* harmony export */ });
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+
+function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.user.name) + " is calling...", 1
+  /* TEXT */
+  ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "ok",
+    onClick: _cache[0] || (_cache[0] = function () {
+      return $options.acceptVideoCall && $options.acceptVideoCall.apply($options, arguments);
+    })
+  }, "accept"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    onClick: _cache[1] || (_cache[1] = function () {
+      return $options.rejectVideoCall && $options.rejectVideoCall.apply($options, arguments);
+    }),
+    "class": "reject"
+  }, "reject")])]);
+}
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true":
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "render": () => (/* binding */ render)
+/* harmony export */ });
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+
+function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, " You are calling to " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.userData.name), 1
+  /* TEXT */
+  ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "end",
+    onClick: _cache[0] || (_cache[0] = function ($event) {
+      return _ctx.$emit('cancelCall');
+    })
+  }, "End the Call")]);
+}
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRoom.vue?vue&type=template&id=08bfce9a":
+/*!*******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRoom.vue?vue&type=template&id=08bfce9a ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "render": () => (/* binding */ render)
+/* harmony export */ });
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+
+
+var _hoisted_1 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  "class": "video-container"
+}, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+  "class": "video-player"
+})], -1
+/* HOISTED */
+);
+
+function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.callPartner.name), 1
+  /* TEXT */
+  ), _hoisted_1, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    onClick: _cache[0] || (_cache[0] = function ($event) {
+      return _ctx.$emit('callEnded', $props.callPartner.id);
+    })
+  }, "End Call")]);
 }
 
 /***/ }),
@@ -21089,6 +21436,54 @@ __webpack_require__.r(__webpack_exports__);
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
 ___CSS_LOADER_EXPORT___.push([module.id, "\npage[data-v-73506780]{\n        width: 30%;\n        margin-left: 30%;\n        display: flex;\n        flex-direction: column;\n        align-items: center;\n        justify-content: center;\n}\ninput[data-v-73506780]{\n        border: 1px solid black;\n        background-color: #a0aec0;\n}\n.register[data-v-73506780]{\n    display: flex;\n    justify-content: center;\n    align-content: center;\n}\n", ""]);
+// Exports
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css":
+/*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css ***!
+  \************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__);
+// Imports
+
+var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
+// Module
+___CSS_LOADER_EXPORT___.push([module.id, "\n.ok[data-v-05fb2a9f]{\n    background-color: green;\n}\n.reject[data-v-05fb2a9f]{\n        background-color: red;\n}\n", ""]);
+// Exports
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css":
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__);
+// Imports
+
+var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
+// Module
+___CSS_LOADER_EXPORT___.push([module.id, "\n.end[data-v-5db22fa0]{\n    background-color: red;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -45190,6 +45585,66 @@ var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js
 
 /***/ }),
 
+/***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css":
+/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCall_vue_vue_type_style_index_0_id_05fb2a9f_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../node_modules/vue-loader/dist/stylePostLoader.js!../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css");
+
+            
+
+var options = {};
+
+options.insert = "head";
+options.singleton = false;
+
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCall_vue_vue_type_style_index_0_id_05fb2a9f_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
+
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCall_vue_vue_type_style_index_0_id_05fb2a9f_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
+
+/***/ }),
+
+/***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css":
+/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRequest_vue_vue_type_style_index_0_id_5db22fa0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../node_modules/vue-loader/dist/stylePostLoader.js!../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css");
+
+            
+
+var options = {};
+
+options.insert = "head";
+options.singleton = false;
+
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRequest_vue_vue_type_style_index_0_id_5db22fa0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
+
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRequest_vue_vue_type_style_index_0_id_5db22fa0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
+
+/***/ }),
+
 /***/ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js":
 /*!****************************************************************************!*\
   !*** ./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js ***!
@@ -45677,6 +46132,96 @@ if (false) {}
 
 /***/ }),
 
+/***/ "./resources/Component/VideoCall.vue":
+/*!*******************************************!*\
+  !*** ./resources/Component/VideoCall.vue ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _VideoCall_vue_vue_type_template_id_05fb2a9f_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true */ "./resources/Component/VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true");
+/* harmony import */ var _VideoCall_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./VideoCall.vue?vue&type=script&lang=js */ "./resources/Component/VideoCall.vue?vue&type=script&lang=js");
+/* harmony import */ var _VideoCall_vue_vue_type_style_index_0_id_05fb2a9f_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css */ "./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css");
+/* harmony import */ var C_OpenServer_domains_Newtask_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+
+
+
+
+;
+
+
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_Newtask_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_VideoCall_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_VideoCall_vue_vue_type_template_id_05fb2a9f_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-05fb2a9f"],['__file',"resources/Component/VideoCall.vue"]])
+/* hot reload */
+if (false) {}
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (__exports__);
+
+/***/ }),
+
+/***/ "./resources/Component/VideoCallRequest.vue":
+/*!**************************************************!*\
+  !*** ./resources/Component/VideoCallRequest.vue ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _VideoCallRequest_vue_vue_type_template_id_5db22fa0_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true */ "./resources/Component/VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true");
+/* harmony import */ var _VideoCallRequest_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./VideoCallRequest.vue?vue&type=script&lang=js */ "./resources/Component/VideoCallRequest.vue?vue&type=script&lang=js");
+/* harmony import */ var _VideoCallRequest_vue_vue_type_style_index_0_id_5db22fa0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css */ "./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css");
+/* harmony import */ var C_OpenServer_domains_Newtask_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+
+
+
+
+;
+
+
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_Newtask_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_VideoCallRequest_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_VideoCallRequest_vue_vue_type_template_id_5db22fa0_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-5db22fa0"],['__file',"resources/Component/VideoCallRequest.vue"]])
+/* hot reload */
+if (false) {}
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (__exports__);
+
+/***/ }),
+
+/***/ "./resources/Component/VideoCallRoom.vue":
+/*!***********************************************!*\
+  !*** ./resources/Component/VideoCallRoom.vue ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _VideoCallRoom_vue_vue_type_template_id_08bfce9a__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./VideoCallRoom.vue?vue&type=template&id=08bfce9a */ "./resources/Component/VideoCallRoom.vue?vue&type=template&id=08bfce9a");
+/* harmony import */ var _VideoCallRoom_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./VideoCallRoom.vue?vue&type=script&lang=js */ "./resources/Component/VideoCallRoom.vue?vue&type=script&lang=js");
+/* harmony import */ var C_OpenServer_domains_Newtask_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+
+
+
+
+;
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_Newtask_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__["default"])(_VideoCallRoom_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_VideoCallRoom_vue_vue_type_template_id_08bfce9a__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/Component/VideoCallRoom.vue"]])
+/* hot reload */
+if (false) {}
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (__exports__);
+
+/***/ }),
+
 /***/ "./resources/Component/ChatComponent.vue?vue&type=script&lang=js":
 /*!***********************************************************************!*\
   !*** ./resources/Component/ChatComponent.vue?vue&type=script&lang=js ***!
@@ -45769,6 +46314,54 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_RegisterComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
 /* harmony export */ });
 /* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_RegisterComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./RegisterComponent.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/RegisterComponent.vue?vue&type=script&lang=js");
+ 
+
+/***/ }),
+
+/***/ "./resources/Component/VideoCall.vue?vue&type=script&lang=js":
+/*!*******************************************************************!*\
+  !*** ./resources/Component/VideoCall.vue?vue&type=script&lang=js ***!
+  \*******************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCall_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
+/* harmony export */ });
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCall_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCall.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=script&lang=js");
+ 
+
+/***/ }),
+
+/***/ "./resources/Component/VideoCallRequest.vue?vue&type=script&lang=js":
+/*!**************************************************************************!*\
+  !*** ./resources/Component/VideoCallRequest.vue?vue&type=script&lang=js ***!
+  \**************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRequest_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
+/* harmony export */ });
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRequest_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCallRequest.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=script&lang=js");
+ 
+
+/***/ }),
+
+/***/ "./resources/Component/VideoCallRoom.vue?vue&type=script&lang=js":
+/*!***********************************************************************!*\
+  !*** ./resources/Component/VideoCallRoom.vue?vue&type=script&lang=js ***!
+  \***********************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRoom_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
+/* harmony export */ });
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRoom_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCallRoom.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRoom.vue?vue&type=script&lang=js");
  
 
 /***/ }),
@@ -45869,6 +46462,54 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./resources/Component/VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true":
+/*!*************************************************************************************!*\
+  !*** ./resources/Component/VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true ***!
+  \*************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "render": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCall_vue_vue_type_template_id_05fb2a9f_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render)
+/* harmony export */ });
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCall_vue_vue_type_template_id_05fb2a9f_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true");
+
+
+/***/ }),
+
+/***/ "./resources/Component/VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true":
+/*!********************************************************************************************!*\
+  !*** ./resources/Component/VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true ***!
+  \********************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "render": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRequest_vue_vue_type_template_id_5db22fa0_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render)
+/* harmony export */ });
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRequest_vue_vue_type_template_id_5db22fa0_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true");
+
+
+/***/ }),
+
+/***/ "./resources/Component/VideoCallRoom.vue?vue&type=template&id=08bfce9a":
+/*!*****************************************************************************!*\
+  !*** ./resources/Component/VideoCallRoom.vue?vue&type=template&id=08bfce9a ***!
+  \*****************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "render": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRoom_vue_vue_type_template_id_08bfce9a__WEBPACK_IMPORTED_MODULE_0__.render)
+/* harmony export */ });
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRoom_vue_vue_type_template_id_08bfce9a__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCallRoom.vue?vue&type=template&id=08bfce9a */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRoom.vue?vue&type=template&id=08bfce9a");
+
+
+/***/ }),
+
 /***/ "./resources/Component/ChatComponent.vue?vue&type=style&index=0&id=7ffe2cab&scoped=true&lang=css":
 /*!*******************************************************************************************************!*\
   !*** ./resources/Component/ChatComponent.vue?vue&type=style&index=0&id=7ffe2cab&scoped=true&lang=css ***!
@@ -45943,6 +46584,32 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_RegisterComponent_vue_vue_type_style_index_0_id_73506780_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/style-loader/dist/cjs.js!../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../node_modules/vue-loader/dist/stylePostLoader.js!../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./RegisterComponent.vue?vue&type=style&index=0&id=73506780&scoped=true&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/RegisterComponent.vue?vue&type=style&index=0&id=73506780&scoped=true&lang=css");
+
+
+/***/ }),
+
+/***/ "./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css":
+/*!***************************************************************************************************!*\
+  !*** ./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css ***!
+  \***************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCall_vue_vue_type_style_index_0_id_05fb2a9f_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/style-loader/dist/cjs.js!../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../node_modules/vue-loader/dist/stylePostLoader.js!../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css");
+
+
+/***/ }),
+
+/***/ "./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css":
+/*!**********************************************************************************************************!*\
+  !*** ./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css ***!
+  \**********************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_VideoCallRequest_vue_vue_type_style_index_0_id_5db22fa0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../node_modules/style-loader/dist/cjs.js!../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../node_modules/vue-loader/dist/stylePostLoader.js!../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css");
 
 
 /***/ }),

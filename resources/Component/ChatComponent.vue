@@ -1,6 +1,6 @@
 <template>
     <div class="chat">
-        <div class="username"><p>{{friendsData.name}}</p><button @click="$emit('closeChat',usersIds)">&#x2715</button></div>
+        <div class="username"><p>{{friendsData.name}}</p><button @click="sendVideoCallRequest">Call</button><button @click="$emit('closeChat',usersIds)">&#x2715</button></div>
         <div class="messages">
 
             <p v-for="message in messages" :class="{ fromMe:message.from==currentUserId,toMe:message.from!=currentUserId}">{{message.message}}</p>
@@ -30,6 +30,16 @@
             }
         },
         methods:{
+            sendVideoCallRequest(){
+
+                setTimeout( () => {
+                    this.activeUsersChannel.whisper('calling', {
+                        caller: this.currentUserId,
+                        callingTo:this.anotherUserId
+                    })
+                }, 300);
+                this.$emit('sendCall',this.anotherUserId);
+            },
             async getChatMessages(ChatIndex){
                 await sendRequestWithBerarer.post('/chat',{to:this.anotherUserId,from:this.currentUserId})
                     .then(chatMessages=> {

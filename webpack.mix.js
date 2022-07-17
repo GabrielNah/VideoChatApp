@@ -11,7 +11,8 @@ const mix = require('laravel-mix');
  |
  */
 
-mix.js('resources/js/app.js', 'public/js').vue()
+mix.js('resources/js/app.js', 'public/js/app.js').
+js('resources/assets/AgoraRTC_N-4.7.3.js', 'public/js/assets/Agora.js').vue()
     .postCss('resources/css/app.css', 'public/css', [
         //
     ]);

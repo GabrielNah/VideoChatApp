@@ -7,6 +7,7 @@
         <title>Laravel</title>
 
         <!-- Fonts -->
+        <script src="{{asset('js/assets/AgoraRTC_N-4.7.3.js')}}"></script>
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
         <!-- Styles -->
         <style>
@@ -24,6 +25,5 @@
 
     </div>
     <script src="{{asset('/js/app.js')}}"></script>
-    <script src="{{asset('/js/assets/Agora.js')}}"></script>
     </body>
 </html>

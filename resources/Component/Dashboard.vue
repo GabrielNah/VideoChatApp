@@ -5,8 +5,8 @@
                 privet user {{user.name}}
             </h1>
         </div>
-        <div>
-            <video-call-room @callEnded="endCall" v-if="onGoingCall" :user="user" :callPartner="onGoingCall == 'inComing' ? callerData:callReceiver"> </video-call-room>
+        <div class="main-content">
+            <video-call-room @callEnded="endCall" v-if="onGoingCall" :user="user" :callType="onGoingCall" :callPartner="onGoingCall == 'inComing' ? callerData:callReceiver"> </video-call-room>
             <video-call @callRejected="rejectVideoCallRequest" @callAccepted="acceptVideoCallRequest" v-if="incomingCall" :user="callerData"></video-call>
             <video-call-request  @cancelCall="cancelCallRequest" v-if="outGoingCall" :userData="callReceiver"></video-call-request>
         </div>
@@ -33,7 +33,7 @@
         components: {VideoCallRoom, VideoCallRequest, VideoCall, ChatComponent},
         data(){
           return{
-              user:null,
+              user:'',
               friends:null,
               chats:[],
               receivedNewMessage:false,
@@ -113,12 +113,14 @@
             },
             handleAcceptedVideoCallRequest(){
                 this.userStateChannel.listenForWhisper('callAccepted',(acceptedCallData)=>{
-                    if(this.user.id==acceptedCallData.callFrom){
-                        if(this.callReceiver.id==acceptedCallData.acceptedFrom){
-                            this.onGoingCall="outGoing";
-                            this.outGoingCall=false;
+                        if(this.user.id==acceptedCallData.callFrom){
+                            if(this.callReceiver.id==acceptedCallData.acceptedFrom){
+                                this.onGoingCall="outGoing";
+                                this.outGoingCall=false;
+                            }
                         }
-                    }
+
+
                 })
             },
             handleRejectedVideoCallRequest(){
@@ -238,7 +240,7 @@
                 })
             }
         },
-        async beforeCreate(){
+        async created(){
                await sendRequestWithBerarer.get('/user',).then((usersData)=>{
                          console.log(usersData)
                    this.user=usersData.data.user
@@ -260,7 +262,6 @@
             this.handleRejectedVideoCallRequest();
             this.handleAcceptedVideoCallRequest()
              this.handleEndedCalls();
-
         }
 
 
@@ -268,6 +269,10 @@
 </script>
 
 <style scoped>
+    .main-content{
+        width: fit-content;
+        height: fit-content%;
+    }
     .hello_user{
         height: 20px;
     }

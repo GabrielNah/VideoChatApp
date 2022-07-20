@@ -325,6 +325,60 @@
                     }
                 }
             }
+        },
+        "/agoraToken": {
+            "post": {
+                "tags": [
+                    "Calls`s Routes"
+                ],
+                "summary": "GetTokenForVideoCall",
+                "operationId": "get token for videoCall",
+                "requestBody": {
+                    "request": "Call Request",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendCallRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "message": "Unauthinticated"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "UnprocessibleContent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrors"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Call request was sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "token": "d2342d3fg4326f346b45h7568j67867k789mk7g56v44"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -349,6 +403,18 @@
                     "from": "1",
                     "to": "115",
                     "message": "message"
+                }
+            },
+            "SendCallRequest": {
+                "properties": {
+                    "integer": {
+                        "type": "from",
+                        "example": "1"
+                    }
+                },
+                "type": "object",
+                "example": {
+                    "channelName": "MyChannel"
                 }
             },
             "UserData": {

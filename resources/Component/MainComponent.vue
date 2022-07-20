@@ -20,7 +20,7 @@
             }else {
                 this.$store.commit('changeUserStatus',true)
             }
-        }
+        },
     }
 </script>
 

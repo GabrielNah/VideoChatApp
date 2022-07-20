@@ -28,6 +28,7 @@ Route::group(['middleware'=>'auth:sanctum'],function(){
     Route::get('/users',[\App\Http\Controllers\Api\V1\UsersDataController::class,'getAllUsers']);
     Route::post('/chat',[\App\Http\Controllers\Api\V1\UsersDataController::class,'getChatMessages']);
     Route::post('/message',[\App\Http\Controllers\Api\V1\UsersDataController::class,'appendInChat']);
+    Route::post('/agoraToken',[\App\Http\Controllers\Api\V1\VideoCallController::class,'token']);
 
 
 });

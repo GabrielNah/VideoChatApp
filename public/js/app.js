@@ -19956,14 +19956,15 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       newMessage: null,
       rightChatIndex: null,
       usersWithOpenChat: [],
-      chatChannel: null,
-      userStateChannel: null,
+      chatChannel: '',
+      userStateChannel: '',
       callerData: null,
       incomingCall: false,
       callAndTypingChannel: null,
       callReceiver: null,
       outGoingCall: false,
-      onGoingCall: false
+      onGoingCall: false,
+      agoraToken: ''
     };
   },
   methods: {
@@ -19983,6 +19984,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         this.callReceiver = null;
       }
     },
+    generateAgoraToken: function generateAgoraToken() {},
     handleEndedCalls: function handleEndedCalls() {
       var _this = this;
 
@@ -20021,33 +20023,58 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       });
     },
     acceptVideoCallRequest: function acceptVideoCallRequest(callFrom) {
-      this.incomingCall = false;
-      this.onGoingCall = "inComing";
-      this.userStateChannel.whisper('callAccepted', {
-        callFrom: callFrom,
-        acceptedFrom: this.user.id
-      });
-    },
-    handleAcceptedVideoCallRequest: function handleAcceptedVideoCallRequest() {
       var _this3 = this;
 
+      return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+        return _regeneratorRuntime().wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.next = 2;
+                return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].post('/agoraToken', {
+                  channelName: 'MyAppChannel'
+                }).then(function (tokenData) {
+                  _this3.agoraToken = '' + tokenData.data.token;
+
+                  _this3.userStateChannel.whisper('callAccepted', {
+                    callFrom: callFrom,
+                    acceptedFrom: _this3.user.id,
+                    token: _this3.agoraToken
+                  });
+
+                  _this3.incomingCall = false;
+                  _this3.onGoingCall = "inComing";
+                });
+
+              case 2:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }))();
+    },
+    handleAcceptedVideoCallRequest: function handleAcceptedVideoCallRequest() {
+      var _this4 = this;
+
       this.userStateChannel.listenForWhisper('callAccepted', function (acceptedCallData) {
-        if (_this3.user.id == acceptedCallData.callFrom) {
-          if (_this3.callReceiver.id == acceptedCallData.acceptedFrom) {
-            _this3.onGoingCall = "outGoing";
-            _this3.outGoingCall = false;
+        if (_this4.user.id == acceptedCallData.callFrom) {
+          if (_this4.callReceiver.id == acceptedCallData.acceptedFrom) {
+            _this4.agoraToken = acceptedCallData.token;
+            _this4.onGoingCall = "outGoing";
+            _this4.outGoingCall = false;
           }
         }
       });
     },
     handleRejectedVideoCallRequest: function handleRejectedVideoCallRequest() {
-      var _this4 = this;
+      var _this5 = this;
 
       this.userStateChannel.listenForWhisper('callRejected', function (rejectedCallData) {
-        if (rejectedCallData.rejectedCallOf == _this4.user.id) {
-          if (rejectedCallData.rejectedFrom == _this4.callReceiver.id) {
-            _this4.outGoingCall = false;
-            _this4.callReceiver = null;
+        if (rejectedCallData.rejectedCallOf == _this5.user.id) {
+          if (rejectedCallData.rejectedFrom == _this5.callReceiver.id) {
+            _this5.outGoingCall = false;
+            _this5.callReceiver = null;
           }
         }
       });
@@ -20073,9 +20100,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       }
     },
     closeChat: function closeChat(chatsArray) {
-      console.log(chatsArray);
-      var indexOfChatsArray = this.getChatsIndex(chatsArray);
-      this.chats.splice(indexOfChatsArray, 1);
+      var Chats = this.chats.filter(function (chat) {
+        return !_.isEqual(chatsArray, chat);
+      });
+      this.chats = Chats;
       var indexOfFriend = this.usersWithOpenChat.indexOf(chatsArray[0]);
       this.usersWithOpenChat.splice(indexOfFriend, 1);
     },
@@ -20134,80 +20162,86 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       }
     },
     catchVideoCalls: function catchVideoCalls() {
-      var _this5 = this;
+      var _this6 = this;
 
       this.userStateChannel.listenForWhisper('calling', function (callMessage) {
         console.log(callMessage);
 
-        _this5.receiveCalls(callMessage);
+        _this6.receiveCalls(callMessage);
       });
     },
     handleIncomingMessages: function handleIncomingMessages() {
-      var _this6 = this;
+      var _this7 = this;
 
       this.chatChannel.listen('SendMessageEvent', function (chatMessage) {
         console.log(chatMessage);
 
-        _this6.showMessageInChat(chatMessage.from, chatMessage.message);
+        _this7.showMessageInChat(chatMessage.from, chatMessage.message);
       });
     },
     handleUsersState: function handleUsersState() {
-      var _this7 = this;
+      var _this8 = this;
 
       this.userStateChannel.listen('UserIsInactiveEvent', function (inactiveUser) {
         console.log(inactiveUser);
 
-        var userIndex = _this7.getUsersIndexById(inactiveUser.inactive_user);
+        var userIndex = _this8.getUsersIndexById(inactiveUser.inactive_user);
 
-        _this7.setUserInctiveState(userIndex);
+        _this8.setUserInctiveState(userIndex);
       }).listen('UserIsActiveEvent', function (activeUser) {
         console.log(activeUser);
 
-        var userIndex = _this7.getUsersIndexById(activeUser.active_user);
+        var userIndex = _this8.getUsersIndexById(activeUser.active_user);
 
-        _this7.setUserActiveState(userIndex);
+        _this8.setUserActiveState(userIndex);
       });
     }
   },
-  created: function created() {
-    var _this8 = this;
+  mounted: function mounted() {
+    var _this9 = this;
 
-    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) {
-          switch (_context.prev = _context.next) {
+          switch (_context2.prev = _context2.next) {
             case 0:
-              _context.next = 2;
+              _context2.next = 2;
               return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].get('/user').then(function (usersData) {
                 console.log(usersData);
-                _this8.user = usersData.data.user;
+                _this9.user = usersData.data.user;
+                return usersData.data.user;
+              }).then(function (userData) {
+                _this9.chatChannel = Echo["private"]('chat-channel.' + userData.id), _this9.userStateChannel = Echo["private"]('activeUsers');
+
+                _this9.handleIncomingMessages();
+
+                _this9.handleUsersState();
+
+                _this9.catchVideoCalls();
+
+                _this9.handleCanceledCalls();
+
+                _this9.handleRejectedVideoCallRequest();
+
+                _this9.handleAcceptedVideoCallRequest();
+
+                _this9.handleEndedCalls();
               });
 
             case 2:
-              _context.next = 4;
+              _context2.next = 4;
               return _js_axios_sendRequestWithBearer__WEBPACK_IMPORTED_MODULE_0__["default"].get('/users').then(function (allUsers) {
                 console.log(allUsers);
-                _this8.friends = allUsers.data;
+                _this9.friends = allUsers.data;
               });
 
             case 4:
             case "end":
-              return _context.stop();
+              return _context2.stop();
           }
         }
-      }, _callee);
+      }, _callee2);
     }))();
-  },
-  mounted: function mounted() {
-    this.chatChannel = Echo["private"]('chat-channel.' + this.user.id);
-    this.userStateChannel = Echo["private"]('activeUsers');
-    this.handleIncomingMessages();
-    this.handleUsersState();
-    this.catchVideoCalls();
-    this.handleCanceledCalls();
-    this.handleRejectedVideoCallRequest();
-    this.handleAcceptedVideoCallRequest();
-    this.handleEndedCalls();
   }
 });
 
@@ -20411,13 +20445,12 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   name: "VideoCallRoom",
-  props: ['user', 'callPartner'],
+  props: ['user', 'callPartner', 'token'],
   data: function data() {
     return {
       localTracks: [],
       callPartners: [],
       app_id: "b5c8c3df2621406a80e2f2d616971085",
-      token: "006b5c8c3df2621406a80e2f2d616971085IADAH/kLqJbqkgxl2TVhfLU8jkHmyAHma2M949tVJeTWu3lK1Y0AAAAAEAC8e3Fn25fXYgEAAQDbl9di",
       channel: "MyAppChannel",
       client: null
     };
@@ -20750,11 +20783,12 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     key: 0,
     onCallEnded: $options.endCall,
     user: $data.user,
+    token: $data.agoraToken,
     callType: $data.onGoingCall,
     callPartner: $data.onGoingCall == 'inComing' ? $data.callerData : $data.callReceiver
   }, null, 8
   /* PROPS */
-  , ["onCallEnded", "user", "callType", "callPartner"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.incomingCall ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_video_call, {
+  , ["onCallEnded", "user", "token", "callType", "callPartner"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $data.incomingCall ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_video_call, {
     key: 1,
     onCallRejected: $options.rejectVideoCallRequest,
     onCallAccepted: $options.acceptVideoCallRequest,
@@ -21288,6 +21322,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 
 window.Pusher = (pusher_js__WEBPACK_IMPORTED_MODULE_1___default());
+var Token = localStorage.getItem('userToken');
 window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   broadcaster: 'pusher',
   key: "36a6c982697c9f6cdf60",
@@ -21633,7 +21668,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.navbar[data-v-0167402c]{\r\n        width: 100%;\r\n        height: 50px;\r\n        margin: 10px 0 10px 0;\n}\r\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n.navbar[data-v-0167402c]{\n        width: 100%;\n        height: 50px;\n        margin: 10px 0 10px 0;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -46272,7 +46307,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _ChatComponent_vue_vue_type_template_id_7ffe2cab_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ChatComponent.vue?vue&type=template&id=7ffe2cab&scoped=true */ "./resources/Component/ChatComponent.vue?vue&type=template&id=7ffe2cab&scoped=true");
 /* harmony import */ var _ChatComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ChatComponent.vue?vue&type=script&lang=js */ "./resources/Component/ChatComponent.vue?vue&type=script&lang=js");
 /* harmony import */ var _ChatComponent_vue_vue_type_style_index_0_id_7ffe2cab_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ChatComponent.vue?vue&type=style&index=0&id=7ffe2cab&scoped=true&lang=css */ "./resources/Component/ChatComponent.vue?vue&type=style&index=0&id=7ffe2cab&scoped=true&lang=css");
-/* harmony import */ var C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
@@ -46280,7 +46315,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_ChatComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_ChatComponent_vue_vue_type_template_id_7ffe2cab_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-7ffe2cab"],['__file',"resources/Component/ChatComponent.vue"]])
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_ChatComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_ChatComponent_vue_vue_type_template_id_7ffe2cab_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-7ffe2cab"],['__file',"resources/Component/ChatComponent.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -46303,7 +46338,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Dashboard_vue_vue_type_template_id_12fe7b8c_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Dashboard.vue?vue&type=template&id=12fe7b8c&scoped=true */ "./resources/Component/Dashboard.vue?vue&type=template&id=12fe7b8c&scoped=true");
 /* harmony import */ var _Dashboard_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Dashboard.vue?vue&type=script&lang=js */ "./resources/Component/Dashboard.vue?vue&type=script&lang=js");
 /* harmony import */ var _Dashboard_vue_vue_type_style_index_0_id_12fe7b8c_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Dashboard.vue?vue&type=style&index=0&id=12fe7b8c&scoped=true&lang=css */ "./resources/Component/Dashboard.vue?vue&type=style&index=0&id=12fe7b8c&scoped=true&lang=css");
-/* harmony import */ var C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
@@ -46311,7 +46346,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_Dashboard_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_Dashboard_vue_vue_type_template_id_12fe7b8c_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-12fe7b8c"],['__file',"resources/Component/Dashboard.vue"]])
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_Dashboard_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_Dashboard_vue_vue_type_template_id_12fe7b8c_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-12fe7b8c"],['__file',"resources/Component/Dashboard.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -46334,7 +46369,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _LoginComponent_vue_vue_type_template_id_cc4df444_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./LoginComponent.vue?vue&type=template&id=cc4df444&scoped=true */ "./resources/Component/LoginComponent.vue?vue&type=template&id=cc4df444&scoped=true");
 /* harmony import */ var _LoginComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./LoginComponent.vue?vue&type=script&lang=js */ "./resources/Component/LoginComponent.vue?vue&type=script&lang=js");
 /* harmony import */ var _LoginComponent_vue_vue_type_style_index_0_id_cc4df444_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./LoginComponent.vue?vue&type=style&index=0&id=cc4df444&scoped=true&lang=css */ "./resources/Component/LoginComponent.vue?vue&type=style&index=0&id=cc4df444&scoped=true&lang=css");
-/* harmony import */ var C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
@@ -46342,7 +46377,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_LoginComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_LoginComponent_vue_vue_type_template_id_cc4df444_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-cc4df444"],['__file',"resources/Component/LoginComponent.vue"]])
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_LoginComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_LoginComponent_vue_vue_type_template_id_cc4df444_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-cc4df444"],['__file',"resources/Component/LoginComponent.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -46365,7 +46400,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MainComponent_vue_vue_type_template_id_0167402c_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MainComponent.vue?vue&type=template&id=0167402c&scoped=true */ "./resources/Component/MainComponent.vue?vue&type=template&id=0167402c&scoped=true");
 /* harmony import */ var _MainComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./MainComponent.vue?vue&type=script&lang=js */ "./resources/Component/MainComponent.vue?vue&type=script&lang=js");
 /* harmony import */ var _MainComponent_vue_vue_type_style_index_0_id_0167402c_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./MainComponent.vue?vue&type=style&index=0&id=0167402c&scoped=true&lang=css */ "./resources/Component/MainComponent.vue?vue&type=style&index=0&id=0167402c&scoped=true&lang=css");
-/* harmony import */ var C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
@@ -46373,7 +46408,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_MainComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_MainComponent_vue_vue_type_template_id_0167402c_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-0167402c"],['__file',"resources/Component/MainComponent.vue"]])
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_MainComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_MainComponent_vue_vue_type_template_id_0167402c_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-0167402c"],['__file',"resources/Component/MainComponent.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -46396,7 +46431,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _NavbarComponent_vue_vue_type_template_id_db8c791a_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./NavbarComponent.vue?vue&type=template&id=db8c791a&scoped=true */ "./resources/Component/NavbarComponent.vue?vue&type=template&id=db8c791a&scoped=true");
 /* harmony import */ var _NavbarComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./NavbarComponent.vue?vue&type=script&lang=js */ "./resources/Component/NavbarComponent.vue?vue&type=script&lang=js");
 /* harmony import */ var _NavbarComponent_vue_vue_type_style_index_0_id_db8c791a_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./NavbarComponent.vue?vue&type=style&index=0&id=db8c791a&scoped=true&lang=css */ "./resources/Component/NavbarComponent.vue?vue&type=style&index=0&id=db8c791a&scoped=true&lang=css");
-/* harmony import */ var C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
@@ -46404,7 +46439,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_NavbarComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_NavbarComponent_vue_vue_type_template_id_db8c791a_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-db8c791a"],['__file',"resources/Component/NavbarComponent.vue"]])
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_NavbarComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_NavbarComponent_vue_vue_type_template_id_db8c791a_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-db8c791a"],['__file',"resources/Component/NavbarComponent.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -46427,7 +46462,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _RegisterComponent_vue_vue_type_template_id_73506780_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./RegisterComponent.vue?vue&type=template&id=73506780&scoped=true */ "./resources/Component/RegisterComponent.vue?vue&type=template&id=73506780&scoped=true");
 /* harmony import */ var _RegisterComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./RegisterComponent.vue?vue&type=script&lang=js */ "./resources/Component/RegisterComponent.vue?vue&type=script&lang=js");
 /* harmony import */ var _RegisterComponent_vue_vue_type_style_index_0_id_73506780_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./RegisterComponent.vue?vue&type=style&index=0&id=73506780&scoped=true&lang=css */ "./resources/Component/RegisterComponent.vue?vue&type=style&index=0&id=73506780&scoped=true&lang=css");
-/* harmony import */ var C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
@@ -46435,7 +46470,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_RegisterComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_RegisterComponent_vue_vue_type_template_id_73506780_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-73506780"],['__file',"resources/Component/RegisterComponent.vue"]])
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_RegisterComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_RegisterComponent_vue_vue_type_template_id_73506780_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-73506780"],['__file',"resources/Component/RegisterComponent.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -46458,7 +46493,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _VideoCall_vue_vue_type_template_id_05fb2a9f_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true */ "./resources/Component/VideoCall.vue?vue&type=template&id=05fb2a9f&scoped=true");
 /* harmony import */ var _VideoCall_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./VideoCall.vue?vue&type=script&lang=js */ "./resources/Component/VideoCall.vue?vue&type=script&lang=js");
 /* harmony import */ var _VideoCall_vue_vue_type_style_index_0_id_05fb2a9f_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css */ "./resources/Component/VideoCall.vue?vue&type=style&index=0&id=05fb2a9f&scoped=true&lang=css");
-/* harmony import */ var C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
@@ -46466,7 +46501,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_VideoCall_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_VideoCall_vue_vue_type_template_id_05fb2a9f_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-05fb2a9f"],['__file',"resources/Component/VideoCall.vue"]])
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_VideoCall_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_VideoCall_vue_vue_type_template_id_05fb2a9f_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-05fb2a9f"],['__file',"resources/Component/VideoCall.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -46489,7 +46524,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _VideoCallRequest_vue_vue_type_template_id_5db22fa0_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true */ "./resources/Component/VideoCallRequest.vue?vue&type=template&id=5db22fa0&scoped=true");
 /* harmony import */ var _VideoCallRequest_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./VideoCallRequest.vue?vue&type=script&lang=js */ "./resources/Component/VideoCallRequest.vue?vue&type=script&lang=js");
 /* harmony import */ var _VideoCallRequest_vue_vue_type_style_index_0_id_5db22fa0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css */ "./resources/Component/VideoCallRequest.vue?vue&type=style&index=0&id=5db22fa0&scoped=true&lang=css");
-/* harmony import */ var C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
@@ -46497,7 +46532,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_VideoCallRequest_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_VideoCallRequest_vue_vue_type_template_id_5db22fa0_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-5db22fa0"],['__file',"resources/Component/VideoCallRequest.vue"]])
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_VideoCallRequest_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_VideoCallRequest_vue_vue_type_template_id_5db22fa0_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-5db22fa0"],['__file',"resources/Component/VideoCallRequest.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -46520,7 +46555,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _VideoCallRoom_vue_vue_type_template_id_08bfce9a_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./VideoCallRoom.vue?vue&type=template&id=08bfce9a&scoped=true */ "./resources/Component/VideoCallRoom.vue?vue&type=template&id=08bfce9a&scoped=true");
 /* harmony import */ var _VideoCallRoom_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./VideoCallRoom.vue?vue&type=script&lang=js */ "./resources/Component/VideoCallRoom.vue?vue&type=script&lang=js");
 /* harmony import */ var _VideoCallRoom_vue_vue_type_style_index_0_id_08bfce9a_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./VideoCallRoom.vue?vue&type=style&index=0&id=08bfce9a&scoped=true&lang=css */ "./resources/Component/VideoCallRoom.vue?vue&type=style&index=0&id=08bfce9a&scoped=true&lang=css");
-/* harmony import */ var C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+/* harmony import */ var C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
@@ -46528,7 +46563,7 @@ __webpack_require__.r(__webpack_exports__);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_LearningSwagger_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_VideoCallRoom_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_VideoCallRoom_vue_vue_type_template_id_08bfce9a_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-08bfce9a"],['__file',"resources/Component/VideoCallRoom.vue"]])
+const __exports__ = /*#__PURE__*/(0,C_OpenServer_domains_VidoeChatApp_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_VideoCallRoom_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_VideoCallRoom_vue_vue_type_template_id_08bfce9a_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-08bfce9a"],['__file',"resources/Component/VideoCallRoom.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -52277,7 +52312,7 @@ function useRoute() {
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"_args":[["axios@0.21.4","C:\\\\OpenServer\\\\domains\\\\LearningSwagger"]],"_development":true,"_from":"axios@0.21.4","_id":"axios@0.21.4","_inBundle":false,"_integrity":"sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==","_location":"/axios","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"axios@0.21.4","name":"axios","escapedName":"axios","rawSpec":"0.21.4","saveSpec":null,"fetchSpec":"0.21.4"},"_requiredBy":["#DEV:/"],"_resolved":"https://registry.npmjs.org/axios/-/axios-0.21.4.tgz","_spec":"0.21.4","_where":"C:\\\\OpenServer\\\\domains\\\\LearningSwagger","author":{"name":"Matt Zabriskie"},"browser":{"./lib/adapters/http.js":"./lib/adapters/xhr.js"},"bugs":{"url":"https://github.com/axios/axios/issues"},"bundlesize":[{"path":"./dist/axios.min.js","threshold":"5kB"}],"dependencies":{"follow-redirects":"^1.14.0"},"description":"Promise based HTTP client for the browser and node.js","devDependencies":{"coveralls":"^3.0.0","es6-promise":"^4.2.4","grunt":"^1.3.0","grunt-banner":"^0.6.0","grunt-cli":"^1.2.0","grunt-contrib-clean":"^1.1.0","grunt-contrib-watch":"^1.0.0","grunt-eslint":"^23.0.0","grunt-karma":"^4.0.0","grunt-mocha-test":"^0.13.3","grunt-ts":"^6.0.0-beta.19","grunt-webpack":"^4.0.2","istanbul-instrumenter-loader":"^1.0.0","jasmine-core":"^2.4.1","karma":"^6.3.2","karma-chrome-launcher":"^3.1.0","karma-firefox-launcher":"^2.1.0","karma-jasmine":"^1.1.1","karma-jasmine-ajax":"^0.1.13","karma-safari-launcher":"^1.0.0","karma-sauce-launcher":"^4.3.6","karma-sinon":"^1.0.5","karma-sourcemap-loader":"^0.3.8","karma-webpack":"^4.0.2","load-grunt-tasks":"^3.5.2","minimist":"^1.2.0","mocha":"^8.2.1","sinon":"^4.5.0","terser-webpack-plugin":"^4.2.3","typescript":"^4.0.5","url-search-params":"^0.10.0","webpack":"^4.44.2","webpack-dev-server":"^3.11.0"},"homepage":"https://axios-http.com","jsdelivr":"dist/axios.min.js","keywords":["xhr","http","ajax","promise","node"],"license":"MIT","main":"index.js","name":"axios","repository":{"type":"git","url":"git+https://github.com/axios/axios.git"},"scripts":{"build":"NODE_ENV=production grunt build","coveralls":"cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js","examples":"node ./examples/server.js","fix":"eslint --fix lib/**/*.js","postversion":"git push && git push --tags","preversion":"npm test","start":"node ./sandbox/server.js","test":"grunt test","version":"npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json"},"typings":"./index.d.ts","unpkg":"dist/axios.min.js","version":"0.21.4"}');
+module.exports = JSON.parse('{"_args":[["axios@0.21.4","C:\\\\OpenServer\\\\domains\\\\VidoeChatApp"]],"_development":true,"_from":"axios@0.21.4","_id":"axios@0.21.4","_inBundle":false,"_integrity":"sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==","_location":"/axios","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"axios@0.21.4","name":"axios","escapedName":"axios","rawSpec":"0.21.4","saveSpec":null,"fetchSpec":"0.21.4"},"_requiredBy":["#DEV:/"],"_resolved":"https://registry.npmjs.org/axios/-/axios-0.21.4.tgz","_spec":"0.21.4","_where":"C:\\\\OpenServer\\\\domains\\\\VidoeChatApp","author":{"name":"Matt Zabriskie"},"browser":{"./lib/adapters/http.js":"./lib/adapters/xhr.js"},"bugs":{"url":"https://github.com/axios/axios/issues"},"bundlesize":[{"path":"./dist/axios.min.js","threshold":"5kB"}],"dependencies":{"follow-redirects":"^1.14.0"},"description":"Promise based HTTP client for the browser and node.js","devDependencies":{"coveralls":"^3.0.0","es6-promise":"^4.2.4","grunt":"^1.3.0","grunt-banner":"^0.6.0","grunt-cli":"^1.2.0","grunt-contrib-clean":"^1.1.0","grunt-contrib-watch":"^1.0.0","grunt-eslint":"^23.0.0","grunt-karma":"^4.0.0","grunt-mocha-test":"^0.13.3","grunt-ts":"^6.0.0-beta.19","grunt-webpack":"^4.0.2","istanbul-instrumenter-loader":"^1.0.0","jasmine-core":"^2.4.1","karma":"^6.3.2","karma-chrome-launcher":"^3.1.0","karma-firefox-launcher":"^2.1.0","karma-jasmine":"^1.1.1","karma-jasmine-ajax":"^0.1.13","karma-safari-launcher":"^1.0.0","karma-sauce-launcher":"^4.3.6","karma-sinon":"^1.0.5","karma-sourcemap-loader":"^0.3.8","karma-webpack":"^4.0.2","load-grunt-tasks":"^3.5.2","minimist":"^1.2.0","mocha":"^8.2.1","sinon":"^4.5.0","terser-webpack-plugin":"^4.2.3","typescript":"^4.0.5","url-search-params":"^0.10.0","webpack":"^4.44.2","webpack-dev-server":"^3.11.0"},"homepage":"https://axios-http.com","jsdelivr":"dist/axios.min.js","keywords":["xhr","http","ajax","promise","node"],"license":"MIT","main":"index.js","name":"axios","repository":{"type":"git","url":"git+https://github.com/axios/axios.git"},"scripts":{"build":"NODE_ENV=production grunt build","coveralls":"cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js","examples":"node ./examples/server.js","fix":"eslint --fix lib/**/*.js","postversion":"git push && git push --tags","preversion":"npm test","start":"node ./sandbox/server.js","test":"grunt test","version":"npm run build && grunt version && git add -A dist && git add CHANGELOG.md bower.json package.json"},"typings":"./index.d.ts","unpkg":"dist/axios.min.js","version":"0.21.4"}');
 
 /***/ })
 

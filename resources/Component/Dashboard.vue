@@ -6,7 +6,7 @@
             </h1>
         </div>
         <div class="main-content">
-            <video-call-room @callEnded="endCall" v-if="onGoingCall" :user="user" :callType="onGoingCall" :callPartner="onGoingCall == 'inComing' ? callerData:callReceiver"> </video-call-room>
+            <video-call-room @callEnded="endCall" v-if="onGoingCall" :user="user" :token="agoraToken" :callType="onGoingCall" :callPartner="onGoingCall == 'inComing' ? callerData:callReceiver"> </video-call-room>
             <video-call @callRejected="rejectVideoCallRequest" @callAccepted="acceptVideoCallRequest" v-if="incomingCall" :user="callerData"></video-call>
             <video-call-request  @cancelCall="cancelCallRequest" v-if="outGoingCall" :userData="callReceiver"></video-call-request>
         </div>
@@ -40,17 +40,20 @@
               newMessage:null,
               rightChatIndex:null,
               usersWithOpenChat:[],
-              chatChannel:null,
-              userStateChannel:null,
+              chatChannel:'',
+              userStateChannel:'',
               callerData:null,
               incomingCall:false,
               callAndTypingChannel:null,
               callReceiver:null,
               outGoingCall:false,
               onGoingCall:false,
+              agoraToken:'',
+
 
           }
         },
+
         methods:{
             endCall(callPartnerId){
                 this.userStateChannel.whisper('callEnded',{
@@ -66,6 +69,7 @@
                     this.callReceiver=null;
                 }
             },
+            generateAgoraToken(){},
             handleEndedCalls(){
                 this.userStateChannel.listenForWhisper('callEnded',(endedCallData)=>{
                     if(endedCallData.callPartnerId==this.user.id){
@@ -100,23 +104,27 @@
                 })
 
             },
-            acceptVideoCallRequest(callFrom) {
-                this.incomingCall=false
-                this.onGoingCall="inComing";
-
-                this.userStateChannel.whisper('callAccepted',{
-                    callFrom,
-                    acceptedFrom:this.user.id
-                });
-
+           async acceptVideoCallRequest(callFrom) {
+                await  sendRequestWithBerarer.post('/agoraToken',{channelName:'MyAppChannel'}).then((tokenData)=>{
+                    this.agoraToken=''+tokenData.data.token;
+                    this.userStateChannel.whisper('callAccepted',{
+                        callFrom,
+                        acceptedFrom:this.user.id,
+                        token:this.agoraToken,
+                    });
+                    this.incomingCall=false
+                    this.onGoingCall="inComing";
+                })
 
             },
             handleAcceptedVideoCallRequest(){
                 this.userStateChannel.listenForWhisper('callAccepted',(acceptedCallData)=>{
                         if(this.user.id==acceptedCallData.callFrom){
                             if(this.callReceiver.id==acceptedCallData.acceptedFrom){
+                                this.agoraToken=acceptedCallData.token;
                                 this.onGoingCall="outGoing";
                                 this.outGoingCall=false;
+
                             }
                         }
 
@@ -156,9 +164,8 @@
                 }
             },
             closeChat(chatsArray){
-                console.log(chatsArray)
-                let indexOfChatsArray=this.getChatsIndex(chatsArray);
-                this.chats.splice(indexOfChatsArray,1);
+                let Chats=this.chats.filter(chat=>!_.isEqual(chatsArray,chat))
+                this.chats=Chats;
                 let indexOfFriend=this.usersWithOpenChat.indexOf(chatsArray[0]);
                 this.usersWithOpenChat.splice(indexOfFriend,1)
 
@@ -240,10 +247,21 @@
                 })
             }
         },
-        async created(){
+        async mounted(){
                await sendRequestWithBerarer.get('/user',).then((usersData)=>{
                          console.log(usersData)
                    this.user=usersData.data.user
+                    return usersData.data.user
+               }).then((userData)=>{
+                   this.chatChannel=Echo.private('chat-channel.'+userData.id),
+                       this.userStateChannel=Echo.private('activeUsers')
+                   this.handleIncomingMessages();
+                   this.handleUsersState();
+                   this.catchVideoCalls();
+                   this.handleCanceledCalls();
+                   this.handleRejectedVideoCallRequest();
+                   this.handleAcceptedVideoCallRequest()
+                   this.handleEndedCalls();
                })
                  await sendRequestWithBerarer.get('/users',).then((allUsers)=>{
                          console.log(allUsers)
@@ -252,17 +270,6 @@
                  })
 
              },
-         mounted() {
-             this.chatChannel=Echo.private('chat-channel.'+this.user.id);
-             this.userStateChannel=Echo.private('activeUsers');
-            this.handleIncomingMessages();
-            this.handleUsersState();
-             this.catchVideoCalls();
-            this.handleCanceledCalls();
-            this.handleRejectedVideoCallRequest();
-            this.handleAcceptedVideoCallRequest()
-             this.handleEndedCalls();
-        }
 
 
     }

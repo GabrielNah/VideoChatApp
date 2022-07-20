@@ -14,13 +14,12 @@
 <script>
     export default {
         name: "VideoCallRoom",
-        props:['user','callPartner'],
+        props:['user','callPartner','token'],
         data(){
             return {
                 localTracks:[],
                 callPartners:[],
                 app_id:"b5c8c3df2621406a80e2f2d616971085",
-                token:"006b5c8c3df2621406a80e2f2d616971085IADAH/kLqJbqkgxl2TVhfLU8jkHmyAHma2M949tVJeTWu3lK1Y0AAAAAEAC8e3Fn25fXYgEAAQDbl9di",
                 channel:"MyAppChannel",
                 client:null,
             }

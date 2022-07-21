@@ -1,7 +1,7 @@
 <template>
-    <div>
-        <h1>{{user.name}} is calling...</h1>
-        <div><button class="ok" @click="acceptVideoCall">accept</button><button @click="rejectVideoCall" class="reject">reject</button></div>
+    <div class="mt-3 ">
+        <h1 class="text-bg-primary rounded text-xl-center">{{user.name}} is calling...</h1>
+        <div class="d-flex justify-content-center align-items-center"><button class="btn ok fw-bold" @click="acceptVideoCall">accept</button><button @click="rejectVideoCall" class=" btn reject fw-bold">reject</button></div>
     </div>
 </template>
 

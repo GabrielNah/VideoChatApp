@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <navbar-component class="navbar"></navbar-component>
+    <div class="container-lg">
+        <navbar-component class="mt-5"></navbar-component>
         <router-view></router-view>
 
 
@@ -25,9 +25,5 @@
 </script>
 
 <style scoped>
-    .navbar{
-        width: 100%;
-        height: 50px;
-        margin: 10px 0 10px 0;
-    }
+
 </style>

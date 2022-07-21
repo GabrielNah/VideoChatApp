@@ -1,13 +1,15 @@
 <template>
-    <div v-cloak class="videoCallRoom">
+    <div v-cloak class="mt-3 w-75 ">
         <h1>{{callPartner.name}}</h1>
-        <div class="video-container" :id="'user-container'+user.id">
-            <div class="video-player" :id="'user-'+user.id"></div>
+        <div class="d-flex flex-row w-100 ">
+            <div class="video-container w-50 border-success" :id="'user-container'+user.id">
+                <div class="video-player w-100 " :id="'user-'+user.id"></div>
+            </div>
+            <div class="video-container w-50 border-dark" :id="'user-container'+remoteUser.uid" v-for="remoteUser in callPartners">
+                <div class="video-player w-100 " :id="'user-'+remoteUser.uid"></div>
+            </div>
         </div>
-        <div class="video-container" :id="'user-container'+remoteUser.uid" v-for="remoteUser in callPartners">
-            <div class="video-player" :id="'user-'+remoteUser.uid"></div>
-        </div>
-        <button @click="endCall">End Call</button>
+        <button class="btn btn-danger" @click="endCall">End Call</button>
     </div>
 </template>
 
@@ -105,22 +107,10 @@
 </script>
 
 <style scoped>
-    .videoCallRoom{
-        width: 100%;
-        height: 800px;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-evenly;
-    }
-    .video-container{
-        width: 600px;
-        heght:600px;
-        border: 2px solid black;
-        margin:0px 0px 0px 0px;
-    }
+
     .video-player{
-        width: 400px;
-        heght:800px;
-        border: 2px solid black;
+        height:600px !important;
+
     }
+
 </style>

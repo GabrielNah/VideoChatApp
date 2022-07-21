@@ -116,7 +116,6 @@ class AuthController extends BaseController
             $token=$user->createToken("my-token")->plainTextToken;
             $user->is_active=true;
             $user->save();
-            \auth()->login($user);
             event(new UserIsActiveEvent($user->id));
             return $this->responseOk(JsonResource::make(['token'=>$token,'user'=>new UserResource($user)]));
         }
@@ -207,11 +206,15 @@ class AuthController extends BaseController
      */
     public function checkToken(Request $request)
     {
-        if (\auth()->id()==$request->user()->id) {
-           return true;
-        } else {
-            return false;
-        }
+       $user=$request->user();
+       if($user){
+           $user->is_active=true;
+           $user->save();
+           event(new UserIsActiveEvent($user->id));
+           return  true;
+       }else{
+           return false;
+       }
 
     }
     /**

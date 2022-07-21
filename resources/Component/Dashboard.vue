@@ -1,24 +1,30 @@
 <template>
-    <div v-cloak class="dashboard">
-        <div class="hello_user">
-            <h1>
-                privet user {{user.name}}
-            </h1>
-        </div>
-        <div class="main-content">
-            <video-call-room @callEnded="endCall" v-if="onGoingCall" :user="user" :token="agoraToken" :callType="onGoingCall" :callPartner="onGoingCall == 'inComing' ? callerData:callReceiver"> </video-call-room>
-            <video-call @callRejected="rejectVideoCallRequest" @callAccepted="acceptVideoCallRequest" v-if="incomingCall" :user="callerData"></video-call>
-            <video-call-request  @cancelCall="cancelCallRequest" v-if="outGoingCall" :userData="callReceiver"></video-call-request>
-        </div>
-
-        <div class="content">
-            <div class="users">
-                <p v-for="(friend,index) in friends" @click="openChat(index)"   :class="{active:friend.is_active!='0'}">{{friend.name}}</p>
+    <div v-cloak class="position-relative w-100 h-100">
+        <div class="d-inline-block w-75 position-absolute top-0 left-0">
+            <div >
+                <h1 class="fw-bold">{{user.name}}</h1>
             </div>
-            <chat-component @sendCall="sendCallRequest" @calling="receiveCalls" @closeChat="closeChat" :usersData="usersWithOpenChat[index]" :usersIds="chat"  v-for="(chat,index) in chats"></chat-component>
+                <video-call-room @callEnded="endCall" v-if="onGoingCall" :user="user" :token="agoraToken" :callType="onGoingCall" :callPartner="onGoingCall == 'inComing' ? callerData:callReceiver"> </video-call-room>
+                <video-call @callRejected="rejectVideoCallRequest" @callAccepted="acceptVideoCallRequest" v-if="incomingCall" :user="callerData"></video-call>
+                <video-call-request  @cancelCall="cancelCallRequest" v-if="outGoingCall" :userData="callReceiver"></video-call-request>
+
+        </div>
+        <div class="d-inline-block w-25 position-absolute top-0 right-0">
+            <div class="d-inline-block w-100">
+                <p v-for="(friend,index) in friends" @click="openChat(index)" class=" w-75 fw-bold rounded float-end clearfix text-bg-info text-xl-center"   :class="{active:friend.is_active!='0'}">{{friend.name}}</p>
+            </div>
+
         </div>
 
-    </div>
+
+        <div class="position-absolute bottom-0 left-0">
+            <div class="d-flex flex-row flex-wrap">
+
+
+            <chat-component @sendCall="sendCallRequest" @calling="receiveCalls" @closeChat="closeChat" :usersData="usersWithOpenChat[index]" :usersIds="chat"  v-for="(chat,index) in chats"></chat-component>
+                </div>
+            </div>
+        </div>
 
 </template>
 
@@ -248,7 +254,9 @@
             }
         },
         async mounted(){
+
                await sendRequestWithBerarer.get('/user',).then((usersData)=>{
+
                          console.log(usersData)
                    this.user=usersData.data.user
                     return usersData.data.user
@@ -276,34 +284,10 @@
 </script>
 
 <style scoped>
-    .main-content{
-        width: fit-content;
-        height: fit-content%;
-    }
-    .hello_user{
-        height: 20px;
-    }
-    .content{
-        height: 80%;
-        position: relative;
-    }
     .active{
-        background-color: green;
+        background-color: green !important;
     }
-
-    .dashboard{
-        width: 100%;
-        position: relative;
+    p{
+        cursor:pointer
     }
-.users {
-    position: absolute;
-    right: 0;
-    top: 0;
-}
-    .users p{
-        font-weight: bolder;
-        margin-right: 5px;
-    }
-
-
 </style>

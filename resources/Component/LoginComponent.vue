@@ -1,19 +1,16 @@
 <template>
-<div class="page">
-    <div class="forms">
-    <div class="login">
-        <div>
-            <h3>Sign Up here here</h3>
+    <div class="mx-auto w-75 d-flex justify-content-center  flex-column">
+            <div class="d-flex justify-content-center  flex-column align-items-center">
+                <h3 class="w-50 text-xl-center">Sign Up here here</h3>
+                <form action="" id="login" class="form-control w-50 d-flex flex-column justify-content-center ">
+                    <input name="email" placeholder="email"><br>
+                    <input name="password" type="password" placeholder="password"><br>
+                    <button @click.prevent="sendLoginRequest" class="btn-dark btn fw-bold"> Login</button>
+                </form>
+            </div>
 
-            <form action="" id="login">
-                <input name="email" placeholder="email"><br>
-                <input name="password" type="password" placeholder="password"><br>
-                <button @click.prevent="sendLoginRequest"> Login</button>
-            </form>
-        </div>
-     </div>
+
     </div>
-</div>
 </template>
 
 <script>
@@ -29,21 +26,5 @@
 </script>
 
 <style scoped>
-    page{
-        width: 30%;
-        margin-left: 30%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    input{
-        border: 1px solid black;
-        background-color:#a0aec0;
-    }
-    .login{
-        display: flex;
-        justify-content: center;
-        align-content: center;
-    }
+
 </style>

@@ -1,14 +1,14 @@
 <template>
-    <div class="chat">
-        <div class="username"><p>{{friendsData.name}}</p><button @click="sendVideoCallRequest">Call</button><button @click="$emit('closeChat',usersIds)">&#x2715</button></div>
-        <div class="messages">
+    <div class="d-inline-flex flex-column ">
+        <div class="d-flex flex-row w-100 justify-content-between" ><p class="fw-bold">{{friendsData.name}}</p><button class="btn btn-danger" @click="sendVideoCallRequest">Call</button><button class="btn-close" @click="$emit('closeChat',usersIds)"></button></div>
+        <div class="w-100 messages">
 
-            <p v-for="message in messages" :class="{ fromMe:message.from==currentUserId,toMe:message.from!=currentUserId}">{{message.message}}</p>
+            <p v-for="message in messages" class="rounded fw-bold w-auto text-bg-secondary" :class="{ fromMe:message.from==currentUserId,toMe:message.from!=currentUserId}">{{message.message}}</p>
 
         </div>
-        <p class="typing" v-if="userIsTyping"><b>{{friendsData.name}} is Typing</b></p>
+        <p class="typing fw-bold text-bg-primary"  v-if="userIsTyping">{{friendsData.name}} is Typing...</p>
         <div class="sendMessage">
-            <input ref="chatMessage" @keydown="sendTypingEvent" type="text"><button @click="sendMessage">Send</button>
+            <input ref="chatMessage" class="w-75" @keydown="sendTypingEvent" type="text"><button class="w-25 btn-primary" @click="sendMessage">Send</button>
         </div>
     </div>
 </template>
@@ -115,60 +115,19 @@
 </script>
 
 <style scoped>
-    .username{
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        justify-content: space-between;
+    .messages{
+        height: 250px;
+        overflow-y: scroll;
+        background-color: green;
     }
     .fromMe{
         float: right;
         clear: both;
+
     }
     .toMe{
         float: left;
         clear: both;
     }
-    .sendMessage{
-        width: 100%;
-        height: 25%;
-    }
-    .sendMessage button{
-        width: 20%;
-        margin: 0px 0px 0px 0px ;
-    }
-    .chat{
-        margin-top: 25%;
-        display: inline-flex;
-        flex-direction: column;
-        justify-content: space-evenly;
-        border: 2px solid black;
-        width: 20%;
-        height: 60%;
-        position: relative;
-    }
-    .messages{
-        overflow-y: scroll;
-        overflow-x: hidden;
-        margin: 0px 0px 0px 0px ;
-        height: 80%;
-        width: 100%;
-        background-color: #cbd5e0;
-    }
-    .messages p{
-        font-weight: normal;
-        background-color: aqua;
-        width: fit-content;
-        border-radius:10% ;
-    }
-    .typing{
-        background-color:chartreuse;
-        width: 100%;
-        height: 15px;
-        font-size: 15px;
-    }
-    input{
-        background-color: #a0aec0;
-        width: 80%;
-    }
+
 </style>

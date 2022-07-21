@@ -1,22 +1,18 @@
 <template>
-    <div class="page">
-        <div class="forms">
 
-
-    <div class="register">
-        <div>
-            <h3>Register here</h3>
-            <form action="" id="register">
-            <input name="name" v-model="name" placeholder="name"><br>
-            <input name="email" v-model="email" placeholder="email"><br>
-            <input name="password" v-model="password" type="password" placeholder="password"><br>
-            <input type="password" v-model="password_confirmation" name="password_confirmation" placeholder="confirm your password"><br>
-                <button type="submit" @click.prevent="sendRegisterRequest"> Register</button>
+    <div class="mx-auto w-75 d-flex justify-content-center  flex-column">
+        <div class="d-flex justify-content-center  flex-column align-items-center">
+            <h3 class="w-50 text-xl-center">Sign In here </h3>
+            <form action="" id="register" class="form-control w-50 d-flex flex-column justify-content-center ">
+                <input name="name" v-model="name" placeholder="name"><br>
+                <input name="email" v-model="email" placeholder="email"><br>
+                <input name="password" v-model="password" type="password" placeholder="password"><br>
+                <input type="password" v-model="password_confirmation" name="password_confirmation" placeholder="confirm your password"><br>
+                <button  @click.prevent="sendRegisterRequest" class="btn btn-primary fw-bold"> Register</button>
             </form>
         </div>
 
-    </div>
-        </div>
+
     </div>
 </template>
 
@@ -44,21 +40,5 @@
 </script>
 
 <style scoped>
-    page{
-        width: 30%;
-        margin-left: 30%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    input{
-        border: 1px solid black;
-        background-color: #a0aec0;
-    }
-.register{
-    display: flex;
-    justify-content: center;
-    align-content: center;
-}
+
 </style>

@@ -253,9 +253,9 @@
                 })
             }
         },
-        async mounted(){
+        async created(){
 
-               await sendRequestWithBerarer.get('/user',).then((usersData)=>{
+              await  sendRequestWithBerarer.get('/user',).then((usersData)=>{
 
                          console.log(usersData)
                    this.user=usersData.data.user
@@ -271,7 +271,7 @@
                    this.handleAcceptedVideoCallRequest()
                    this.handleEndedCalls();
                })
-                 await sendRequestWithBerarer.get('/users',).then((allUsers)=>{
+              await sendRequestWithBerarer.get('/users',).then((allUsers)=>{
                          console.log(allUsers)
                          this.friends=allUsers.data
 

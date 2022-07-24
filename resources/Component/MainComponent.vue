@@ -10,15 +10,24 @@
 <script>
     import NavbarComponent from "./NavbarComponent";
     import router from "../js/router";
+    import sendRequestWithBerarer from "../js/axios/sendRequestWithBearer";
     export default {
         name: "MainComponent",
         components: {NavbarComponent},
         async beforeMount() {
             let token=localStorage.getItem('userToken');
-            if (token == null){
+
+            if (token === null){
                 this.$store.commit('changeUserStatus',false)
             }else {
-                this.$store.commit('changeUserStatus',true)
+                let UserLogedIn=await sendRequestWithBerarer.get('/checkToken')
+                if(UserLogedIn){
+                    this.$store.commit('changeUserStatus',true)
+                }else {
+                    localStorage.removeItem('userToken');
+                    this.$store.commit('changeUserStatus',false)
+                }
+
             }
         },
     }

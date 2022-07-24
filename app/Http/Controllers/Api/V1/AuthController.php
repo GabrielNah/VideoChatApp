@@ -208,9 +208,11 @@ class AuthController extends BaseController
     {
        $user=$request->user();
        if($user){
-           $user->is_active=true;
-           $user->save();
-           event(new UserIsActiveEvent($user->id));
+           if(!$user->is_active){
+               $user->is_active=true;
+               $user->save();
+               event(new UserIsActiveEvent($user->id));
+           }
            return  true;
        }else{
            return false;

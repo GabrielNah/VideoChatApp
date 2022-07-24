@@ -49,7 +49,7 @@ const store = createStore({
         async logout({ commit, state }){
             sendRequestWithBerarer.post('/logout').then((IfEverythingWentRight)=>{
                     if (IfEverythingWentRight){
-                        localStorage.clear();
+                        localStorage.removeItem('userToken');
                         commit('changeUserStatus',false);
                         router.push({path:'/login'})
                     }

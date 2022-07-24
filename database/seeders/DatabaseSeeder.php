@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\ChatMessages;
+use App\Models\User;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -15,10 +17,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-         ChatMessages::create([
-             'to'=>2,
-             'from'=>1,
-             'message'=>Str::random(25)
-         ]);
+         User::factory(20)->create();
     }
 }

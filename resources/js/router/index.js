@@ -32,12 +32,17 @@ const router = createRouter({
 })
 router.beforeEach(async (to,from,next)=>{
     let checkUserLogedIN
-    try {
-   checkUserLogedIN= await sendRequestWithBerarer.get('/checkToken')
+    if(localStorage.getItem('userToken')!== null){
+        try {
+            checkUserLogedIN= await sendRequestWithBerarer.get('/checkToken')
 
-    }catch (e) {
+        }catch (e) {
+            checkUserLogedIN=false;
+        }
+    }else {
         checkUserLogedIN=false;
     }
+
     if(to.meta.authRequired){
         if(checkUserLogedIN){
             if(!store.state.UserLogedIn){

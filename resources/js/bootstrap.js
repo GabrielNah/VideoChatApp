@@ -21,6 +21,9 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
  */
 
 import Echo from 'laravel-echo';
+function getToken(){
+    return localStorage.getItem('userToken');
+}
 
 window.Pusher = require('pusher-js');
 
@@ -32,7 +35,7 @@ window.Echo = new Echo({
     auth: {
         withCredentials: true,
         headers: {
-            'Authorization': "Bearer "+localStorage.getItem('userToken')
+            'Authorization': "Bearer "+getToken()
         }
     }
 });

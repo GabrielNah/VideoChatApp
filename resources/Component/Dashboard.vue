@@ -21,7 +21,7 @@
             <div class="d-flex flex-row flex-wrap">
 
 
-            <chat-component @sendCall="sendCallRequest" @calling="receiveCalls" @closeChat="closeChat" :usersData="usersWithOpenChat[index]" :usersIds="chat"  v-for="(chat,index) in chats"></chat-component>
+            <chat-component @sendCall="sendCallRequest" @calling="receiveCalls" @closeChat="closeChat" :usersData="usersWithOpenChat[index]" :usersIds="chat" :chatIndex="index" v-for="(chat,index) in chats"></chat-component>
                 </div>
             </div>
         </div>
@@ -44,7 +44,6 @@
               chats:[],
               receivedNewMessage:false,
               newMessage:null,
-              rightChatIndex:null,
               usersWithOpenChat:[],
               chatChannel:'',
               userStateChannel:'',
@@ -169,12 +168,9 @@
 
                 }
             },
-            closeChat(chatsArray){
-                let Chats=this.chats.filter(chat=>!_.isEqual(chatsArray,chat))
-                this.chats=Chats;
-                let indexOfFriend=this.usersWithOpenChat.indexOf(chatsArray[0]);
-                this.usersWithOpenChat.splice(indexOfFriend,1)
-
+            closeChat(chatIndex){
+                this.usersWithOpenChat.splice(chatIndex,1)
+                this.chats.splice(chatIndex,1);
             },
             getChatsIndex(chat){
                 let chatIndex;
@@ -203,6 +199,15 @@
                 })
                 return userIndex;
             },
+            getUserById(id){
+                let indexOfUser;
+                this.friends.forEach((user,index)=>{
+                    if(user.id==id){
+                        indexOfUser=index;
+                    }
+                })
+                return indexOfUser;
+            },
             showMessageInChat(friendId,message){
                 let currentUserId=this.user.id;
                 let idsOfUsers=[];
@@ -211,8 +216,8 @@
 
                 if(!this.checkIfChatIsOpen(idsOfUsers)){
                     this.chats.push(idsOfUsers);
-                    let friendUser=this.friends.filter(usersData=>usersData.id=friendId);
-                    this.usersWithOpenChat.push(friendUser[0])
+                    let friendData= this.getUserById(friendId)
+                    this.usersWithOpenChat.push(friendData)
                 }
 
             },
@@ -222,8 +227,9 @@
                 chat.push(anotherUserId);
                 chat.push(this.user.id);
                 if(!this.checkIfChatIsOpen(chat)){
-                    this.chats.push(chat)
                     this.usersWithOpenChat.push(this.friends[someUsersIndex])
+                    this.chats.push(chat)
+
                 }
 
             },

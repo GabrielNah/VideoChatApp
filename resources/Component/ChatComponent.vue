@@ -1,6 +1,6 @@
 <template>
     <div class="d-inline-flex flex-column ">
-        <div class="d-flex flex-row w-100 justify-content-between" ><p class="fw-bold">{{friendsData.name}}</p><button class="btn btn-danger" @click="sendVideoCallRequest">Call</button><button class="btn-close" @click="$emit('closeChat',usersIds)"></button></div>
+        <div class="d-flex flex-row w-100 justify-content-between" ><p class="fw-bold">{{friendsData.name}}</p><button class="btn btn-danger" @click="sendVideoCallRequest">Call</button><button class="btn-close" @click="$emit('closeChat',chatIndex)"></button></div>
         <div class="w-100 messages">
 
             <p v-for="message in messages" class="rounded fw-bold w-auto text-bg-secondary" :class="{ fromMe:message.from==currentUserId,toMe:message.from!=currentUserId}">{{message.message}}</p>
@@ -17,7 +17,7 @@
     import sendRequestWithBerarer from "../js/axios/sendRequestWithBearer";
     export default {
         name: "ChatComponent",
-        props:['usersIds','newChatMessage','usersData'],
+        props:['usersIds','newChatMessage','usersData','chatIndex'],
         data(){
             return{
                 currentUserId:this.usersIds[1],

@@ -20,7 +20,13 @@
             if (token === null){
                 this.$store.commit('changeUserStatus',false)
             }else {
-                let UserLogedIn=await sendRequestWithBerarer.get('/checkToken')
+                let UserLogedIn
+                try {
+                     UserLogedIn=await sendRequestWithBerarer.get('/checkToken')
+                }catch (e) {
+                    UserLogedIn=false;
+                }
+
                 if(UserLogedIn){
                     this.$store.commit('changeUserStatus',true)
                 }else {

@@ -116,6 +116,7 @@ class AuthController extends BaseController
             $token=$user->createToken("my-token")->plainTextToken;
             $user->is_active=true;
             $user->save();
+            \auth('web')->login($user);
             event(new UserIsActiveEvent($user->id));
             return $this->responseOk(JsonResource::make(['token'=>$token,'user'=>new UserResource($user)]));
         }
@@ -163,7 +164,7 @@ class AuthController extends BaseController
      */
     public function getLoggedInUser(Request $request)
     {
-        return $this->responseOk(JsonResource::make(['user'=>new UserResource($request->user())]));
+        return $this->responseOk(JsonResource::make(['user'=>new UserResource(auth('web')->user())]));
     }
 
     /**

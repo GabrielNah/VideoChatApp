@@ -31,46 +31,36 @@ const router = createRouter({
     routes, // short for `routes: routes`
 })
 router.beforeEach(async (to,from,next)=>{
-    let checkUserLogedIN
-    if(localStorage.getItem('userToken')!== null){
-        try {
-            checkUserLogedIN= await sendRequestWithBerarer.get('/checkToken')
-
-        }catch (e) {
-            checkUserLogedIN=false;
-        }
-    }else {
-        checkUserLogedIN=false;
-    }
-
     if(to.meta.authRequired){
-        if(checkUserLogedIN){
-            if(!store.state.UserLogedIn){
+            if(localStorage.getItem('userToken') !== null){
                 store.commit('changeUserStatus',true)
+                return next()
             }
-            return next()
-        }else {
-            if(store.state.UserLogedIn){
+
+
+            else{
                 store.commit('changeUserStatus',false);
                 localStorage.removeItem('userToken')
+                return next({path:'/login'})
             }
-            return next({path:'/login'})
 
-        }
+
+
     }else {
-        if(checkUserLogedIN){
-            if(!store.state.UserLogedIn){
+
+            if(localStorage.getItem('userToken') !== null){
                 store.commit('changeUserStatus',true)
+                return next({path:'/dashboard'})
             }
-            return next({path:'/dashboard'})
-        }else {
-            if(store.state.UserLogedIn){
+
+
+            else {
                 store.commit('changeUserStatus',false);
                 localStorage.removeItem('userToken')
+                return next()
             }
-            return next()
 
-        }
+
     }
 })
 export default router
